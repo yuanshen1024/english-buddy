@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
 import sys
@@ -120,7 +121,7 @@ def main() -> None:
         default=Path(__file__).resolve().parents[1]
         / "assets"
         / "data"
-        / "vocabulary.js",
+        / "vocabulary.json.gz",
     )
     parser.add_argument(
         "--pronouncing-path",
@@ -132,10 +133,14 @@ def main() -> None:
     sys.path.insert(0, str(args.pronouncing_path))
     import pronouncing  # type: ignore
 
-    source = args.vocabulary.read_text(encoding="utf-8")
-    payload_start = source.index("=") + 1
-    payload_end = source.rstrip().rstrip(";").rfind("]") + 1
-    entries = json.loads(source[payload_start:payload_end])
+    if args.vocabulary.suffix == ".gz":
+        with gzip.open(args.vocabulary, "rt", encoding="utf-8") as source:
+            entries = json.load(source)
+    else:
+        source = args.vocabulary.read_text(encoding="utf-8")
+        payload_start = source.index("=") + 1
+        payload_end = source.rstrip().rstrip(";").rfind("]") + 1
+        entries = json.loads(source[payload_start:payload_end])
 
     filled = 0
     for entry in entries:
@@ -160,12 +165,20 @@ def main() -> None:
             entry["phoneticSource"] = "CMUdict"
             filled += 1
 
-    payload = json.dumps(entries, ensure_ascii=False, separators=(",", ":"))
-    args.vocabulary.write_text(
-        "/* Generated from ECDICT and enriched with open CMUdict IPA data. */\n"
-        f"window.ENGLISH_BUDDY_VOCABULARY={payload};\n",
-        encoding="utf-8",
+    payload = json.dumps(
+        entries,
+        ensure_ascii=False,
+        separators=(",", ":"),
     )
+    if args.vocabulary.suffix == ".gz":
+        with gzip.open(args.vocabulary, "wt", encoding="utf-8", compresslevel=9) as output:
+            output.write(payload)
+    else:
+        args.vocabulary.write_text(
+            "/* Generated from ECDICT and enriched with open CMUdict IPA data. */\n"
+            f"window.ENGLISH_BUDDY_VOCABULARY={payload};\n",
+            encoding="utf-8",
+        )
     print(f"Filled {filled} missing phonetics across {len(entries)} entries")
 
 

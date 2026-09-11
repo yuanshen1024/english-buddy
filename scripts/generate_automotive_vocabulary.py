@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import json
+import gzip
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = PROJECT_ROOT / "assets" / "data" / "automotive-vocabulary.js"
-MAIN_VOCABULARY_PATH = PROJECT_ROOT / "assets" / "data" / "vocabulary.js"
+MAIN_VOCABULARY_PATH = PROJECT_ROOT / "assets" / "data" / "vocabulary.json.gz"
 
 MANUAL_PHONETICS = {
     "piston": "/ˈpɪstən/",
@@ -327,9 +328,9 @@ TERMS = {
 def main() -> None:
     phonetics = {}
     if MAIN_VOCABULARY_PATH.is_file():
-        source = MAIN_VOCABULARY_PATH.read_text(encoding="utf-8")
-        payload = source[source.index("=") + 1 : source.rstrip().rstrip(";").rfind("]") + 1]
-        for item in json.loads(payload):
+        with gzip.open(MAIN_VOCABULARY_PATH, "rt", encoding="utf-8") as source:
+            vocabulary = json.load(source)
+        for item in vocabulary:
             word = str(item.get("word") or "").lower()
             phonetic = item.get("phoneticUS") or item.get("phonetic")
             if word and phonetic:

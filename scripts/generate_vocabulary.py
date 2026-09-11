@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gzip
 import json
 import re
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_PATH = PROJECT_ROOT / "assets" / "data" / "vocabulary.js"
+OUTPUT_PATH = PROJECT_ROOT / "assets" / "data" / "vocabulary.json.gz"
 WORD_PATTERN = re.compile(r"^[A-Za-z][A-Za-z-]{1,20}$")
 
 DECK_RULES = [
@@ -117,7 +118,7 @@ def main() -> None:
         default=Path("/private/tmp/ecdict.csv"),
         help="Path to the ECDICT CSV file.",
     )
-    parser.add_argument("--count", type=int, default=8000)
+    parser.add_argument("--count", type=int, default=28000)
     parser.add_argument("--output", type=Path, default=OUTPUT_PATH)
     args = parser.parse_args()
 
@@ -167,13 +168,14 @@ def main() -> None:
         entry["id"] = f"bank-word-{index:05d}"
         entry.pop("_rank", None)
 
+    payload = json.dumps(
+        selected,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(selected, ensure_ascii=False, separators=(",", ":"))
-    args.output.write_text(
-        "/* Generated from ECDICT metadata. Run scripts/generate_vocabulary.py. */\n"
-        f"window.ENGLISH_BUDDY_VOCABULARY={payload};\n",
-        encoding="utf-8",
-    )
+    with gzip.open(args.output, "wb", compresslevel=9) as output:
+        output.write(payload)
     print(f"Generated {len(selected)} entries: {args.output}")
 
 
