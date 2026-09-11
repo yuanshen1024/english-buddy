@@ -39,5 +39,13 @@ if base:
 index_path.write_text(content, encoding="utf-8")
 (output / "404.html").write_text(content, encoding="utf-8")
 (output / ".nojekyll").write_text("", encoding="utf-8")
+versions_page = output / "versions.html"
+if versions_page.is_file():
+    versions_dir = output / "versions"
+    versions_dir.mkdir(exist_ok=True)
+    (versions_dir / "index.html").write_text(
+        versions_page.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 print(f"Pages build created at {output} with base {base or '/'}")
 PY
