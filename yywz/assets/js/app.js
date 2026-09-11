@@ -28,17 +28,6 @@
       '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
     layers:
       '<path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
-    planet:
-      '<circle cx="12" cy="12" r="6"/><path d="M3 15c4 3 14 3 18-6"/><path d="M6 5c5-1 11 1 14 6"/>',
-    leaf: '<path d="M20 4C10 4 4 9 4 16c0 2 1 4 3 4 7 0 13-6 13-16Z"/><path d="M4 20c3-6 8-10 14-13"/>',
-    city: '<path d="M3 21V8h7v13M10 21V3h7v18M17 21V10h4v11"/><path d="M6 11h1M6 15h1M13 6h1M13 10h1M13 14h1"/>',
-    health: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
-    travel: '<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/>',
-    coffee: '<path d="M4 8h14v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5Z"/><path d="M18 10h1a3 3 0 0 1 0 6h-1M7 3v2M11 3v2M15 3v2"/>',
-    laptop: '<rect x="4" y="4" width="16" height="12" rx="2"/><path d="M2 20h20M9 20h6"/>',
-    mountain: '<path d="m3 20 7-12 4 6 2-3 5 9Z"/><path d="m8 12 2-4 3 4"/>',
-    bulb: '<path d="M9 18h6M10 22h4"/><path d="M8.5 14.5A7 7 0 1 1 15.5 14.5c-1 .8-1.5 1.5-1.5 2.5h-4c0-1-.5-1.7-1.5-2.5Z"/>',
-    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     notebook:
       '<path d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 2v20"/><path d="M12 7h5"/><path d="M12 11h5"/>',
     user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
@@ -128,19 +117,6 @@
 
   const daysAgo = (days, hours = 0) =>
     new Date(baseNow - days * 86400000 - hours * 3600000).toISOString();
-
-  const VISUAL_ASSOCIATIONS = [
-    { word: "universe", meaning: "宇宙", icon: "planet", color: "#315f9b" },
-    { word: "sustainable", meaning: "可持续的", icon: "leaf", color: "#28775d" },
-    { word: "urbanization", meaning: "城市化", icon: "city", color: "#6b557f" },
-    { word: "health", meaning: "健康", icon: "health", color: "#a44852" },
-    { word: "travel", meaning: "旅行", icon: "travel", color: "#2f6db5" },
-    { word: "coffee", meaning: "咖啡", icon: "coffee", color: "#815a3a" },
-    { word: "technology", meaning: "科技", icon: "laptop", color: "#315e78" },
-    { word: "mountain", meaning: "山；山脉", icon: "mountain", color: "#4b7354" },
-    { word: "idea", meaning: "想法；主意", icon: "bulb", color: "#a27622" },
-    { word: "world", meaning: "世界", icon: "globe", color: "#376aa6" },
-  ];
 
   const CLOZE_EXAMPLES = [
     { answer: "universe", sentence: "The ______ is very large, and our knowledge of it is still expanding." },
@@ -315,6 +291,165 @@
         "当你不同意时，解释你的理由，而不是简单否定一个想法。",
         "良好的沟通能把不同意见转化为更好的决策。",
       ],
+    },
+    {
+      id: "passage-technology",
+      title: "Technology and Everyday Attention",
+      category: "科技",
+      level: "B2",
+      minutes: 4,
+      english: [
+        "Digital tools are designed to make daily tasks faster and more convenient.",
+        "At the same time, many applications compete for a user’s limited attention.",
+        "Notifications can interrupt deep thinking even when a person does not respond immediately.",
+        "A healthier approach is to decide in advance when technology should be available.",
+        "Attention is easier to protect when people set clear boundaries.",
+      ],
+      chinese: [
+        "数字工具的设计目标是让日常任务更快、更方便。",
+        "与此同时，许多应用都在争夺用户有限的注意力。",
+        "即使一个人没有立即回应，通知也可能打断深度思考。",
+        "更健康的方法是提前决定什么时候可以使用科技产品。",
+        "当人们设定清晰边界时，注意力会更容易得到保护。",
+      ],
+    },
+    {
+      id: "passage-health",
+      title: "Movement and Long-Term Health",
+      category: "健康",
+      level: "B1",
+      minutes: 3,
+      english: [
+        "Regular movement supports both physical and mental health.",
+        "It does not always require a long workout or special equipment.",
+        "Walking, stretching and taking short movement breaks can all make a difference.",
+        "The most useful routine is one that is realistic enough to repeat.",
+        "Consistency matters more than a single intense effort.",
+      ],
+      chinese: [
+        "规律活动有助于身心健康。",
+        "它并不总是需要长时间锻炼或特殊设备。",
+        "散步、拉伸和短暂活动休息都能产生作用。",
+        "最有用的习惯，是现实到足以重复执行的习惯。",
+        "持续比一次高强度努力更重要。",
+      ],
+    },
+    {
+      id: "passage-culture",
+      title: "Understanding Cultural Differences",
+      category: "文化",
+      level: "B2",
+      minutes: 4,
+      english: [
+        "Culture influences how people communicate and interpret behavior.",
+        "A direct style may seem efficient in one context and impolite in another.",
+        "Misunderstandings often happen when people assume that their own expectations are universal.",
+        "Asking questions can be more useful than making quick judgments.",
+        "Cultural awareness grows through observation, patience and reflection.",
+      ],
+      chinese: [
+        "文化会影响人们沟通和解读行为的方式。",
+        "直接风格在一种情境中可能显得高效，在另一种情境中却可能显得无礼。",
+        "当人们把自己国家的期待当成普遍规则时，就容易产生误解。",
+        "提问往往比快速下结论更有帮助。",
+        "文化意识通过观察、耐心和反思逐渐形成。",
+      ],
+    },
+    {
+      id: "passage-environment-policy",
+      title: "From Personal Choice to Public Change",
+      category: "环境",
+      level: "C1",
+      minutes: 4,
+      english: [
+        "Environmental progress depends on both personal choices and institutional action.",
+        "Individual habits can signal demand for cleaner products and stronger standards.",
+        "Policy, however, can change entire systems much faster than isolated choices.",
+        "The two levels of action are most effective when they support each other.",
+        "Evidence-based policy can turn widespread concern into measurable change.",
+      ],
+      chinese: [
+        "环境进步既依赖个人选择，也依赖制度行动。",
+        "个人习惯可以表达对更清洁产品和更严格标准的需求。",
+        "不过，政策改变整个系统的速度远快于孤立的选择。",
+        "当两个层面的行动互相支持时，效果最好。",
+        "基于证据的政策可以把广泛担忧转化为可衡量的改变。",
+      ],
+    },
+  ];
+
+  const DAILY_ENGLISH_CONTENT = [
+    {
+      english: "Small steps every day lead to big changes.",
+      chinese: "每天迈出一小步，最终会带来巨大的改变。",
+      type: "学习动力",
+      note: "lead to 表示“导致；带来”，后面接名词或动名词。",
+    },
+    {
+      english: "Could you say that again in another way?",
+      chinese: "你能换一种方式再说一遍吗？",
+      type: "课堂口语",
+      note: "in another way 是请求换一种表达方式的自然说法。",
+    },
+    {
+      english: "I’m not sure I follow your point.",
+      chinese: "我不太确定自己是否理解了你的观点。",
+      type: "讨论表达",
+      note: "比 I don’t understand 更委婉，适合会议和课堂讨论。",
+    },
+    {
+      english: "The evidence suggests a different conclusion.",
+      chinese: "这些证据指向一个不同的结论。",
+      type: "学术表达",
+      note: "suggest 在这里表示“表明；暗示”，常用于学术写作。",
+    },
+    {
+      english: "We need to weigh the benefits against the costs.",
+      chinese: "我们需要权衡收益与成本。",
+      type: "写作表达",
+      note: "weigh A against B 表示“权衡 A 与 B”。",
+    },
+    {
+      english: "Would you mind speaking a little more slowly?",
+      chinese: "你介意说得再慢一点吗？",
+      type: "听力沟通",
+      note: "Would you mind + doing 是礼貌请求的常用结构。",
+    },
+    {
+      english: "The findings are consistent with previous research.",
+      chinese: "这些发现与先前的研究一致。",
+      type: "文献阅读",
+      note: "be consistent with 表示“与……一致”。",
+    },
+    {
+      english: "I’d like to add one more point.",
+      chinese: "我想再补充一点。",
+      type: "商务口语",
+      note: "适合会议中承接讨论并增加自己的观点。",
+    },
+    {
+      english: "It depends on how we define success.",
+      chinese: "这取决于我们如何定义成功。",
+      type: "观点表达",
+      note: "depend on 后面可接名词、代词或由 how/what 引导的从句。",
+    },
+    {
+      english: "Practice becomes easier when it becomes a habit.",
+      chinese: "当练习成为习惯时，它就会变得更容易。",
+      type: "学习方法",
+      note: "when 引导时间状语从句，两个 becomes 形成结构呼应。",
+    },
+    {
+      english: "The main advantage is that it saves time.",
+      chinese: "主要优点是它可以节省时间。",
+      type: "议论文句型",
+      note: "The main advantage is that… 适合说明观点或优点。",
+    },
+    {
+      english: "Let’s review what we learned yesterday.",
+      chinese: "让我们复习一下昨天学过的内容。",
+      type: "课堂用语",
+      note: "what we learned yesterday 是名词性从句，作 review 的宾语。",
     },
   ];
 
@@ -2032,6 +2167,23 @@
   let state = loadState();
   let speechVoices = [];
 
+  if (state.training?.session?.mode === "image-association") {
+    state.training.session = {
+      mode: "",
+      index: 0,
+      score: 0,
+      items: [],
+      revealed: false,
+      feedback: "",
+    };
+  }
+  if (Array.isArray(state.training?.completedTaskIds)) {
+    state.training.completedTaskIds =
+      state.training.completedTaskIds.filter(
+        (id) => id !== "image-association",
+      );
+  }
+
   function todayKey() {
     return new Date().toISOString().slice(0, 10);
   }
@@ -2517,6 +2669,10 @@
   }
 
   function renderHomePage() {
+    const dailyContent =
+      DAILY_ENGLISH_CONTENT[
+        Math.floor(baseNow / 86400000) % DAILY_ENGLISH_CONTENT.length
+      ];
     const recentNotes = [...state.notes]
       .filter((note) => !note.archived)
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
@@ -2539,6 +2695,33 @@
           </div>
         </section>
 
+        <section class="section daily-english-section">
+          <div class="panel daily-english-card">
+            <div class="daily-english-copy">
+              <div class="eyebrow">TODAY'S ENGLISH</div>
+              <h2>${escapeHTML(dailyContent.english)}</h2>
+              <p>${escapeHTML(dailyContent.chinese)}</p>
+              <div class="daily-english-note">
+                <span class="note-category">${escapeHTML(
+                  dailyContent.type,
+                )}</span>
+                <span>${escapeHTML(dailyContent.note)}</span>
+              </div>
+            </div>
+            <div class="daily-english-actions">
+              <button class="btn primary" data-action="speak-text" data-text="${escapeHTML(
+                dailyContent.english,
+              )}">${icon("volume")}朗读</button>
+              <button class="btn" data-action="shadow-daily-text" data-text="${escapeHTML(
+                dailyContent.english,
+              )}">${icon("mic")}跟读</button>
+              <button class="btn soft" data-action="save-daily-content">${icon(
+                "plus",
+              )}加入笔记</button>
+            </div>
+          </div>
+        </section>
+
         <section class="section">
           <div class="section-head">
             <div><h2>今日任务</h2><p>约 28 分钟，按自己的节奏完成</p></div>
@@ -2551,7 +2734,7 @@
               [
                 "training",
                 "单词训练",
-                "卡片 · 图片 · 听力 · 拼写",
+                "卡片 · 听力 · 拼写 · 跟读",
                 35,
                 "target",
               ],
@@ -3244,8 +3427,8 @@
               [
                 "study/training",
                 "训练中心",
-                "卡片、图片、听音、拼写和跟读",
-                "每日 8 项任务",
+                "卡片、听音、拼写、填空和跟读",
+                "每日 7 项任务",
                 "target",
               ],
               [
@@ -3603,14 +3786,6 @@
         icon: "layers",
         group: "输入",
         count: 12,
-      },
-      {
-        id: "image-association",
-        title: "图片联想",
-        description: "通过视觉场景猜测和记忆单词含义。",
-        icon: "image",
-        group: "输入",
-        count: 10,
       },
       {
         id: "listening-choice",
@@ -6295,8 +6470,6 @@
       )
         .slice(0, mode === "word-cards" ? 12 : 10)
         .map((word) => word.id);
-    } else if (mode === "image-association") {
-      items = VISUAL_ASSOCIATIONS.map((item) => item.word);
     } else if (mode === "listening-choice") {
       items = [...state.words]
         .sort(
@@ -6412,36 +6585,6 @@
           <button class="btn primary" data-action="training-known" data-known="true">${icon(
             "check",
           )}我认识</button>
-        </div>
-      `;
-    } else if (session.mode === "image-association") {
-      const association = VISUAL_ASSOCIATIONS.find(
-        (item) => item.word === current,
-      );
-      const options = [
-        association.word,
-        ...VISUAL_ASSOCIATIONS.filter(
-          (item) => item.word !== association.word,
-        )
-          .slice(0, 3)
-          .map((item) => item.word),
-      ].sort((a, b) => a.localeCompare(b));
-      content = `
-        <div class="association-stage">
-          <div class="association-image" style="--association-color:${
-            association.color
-          }">${icon(association.icon)}</div>
-          <p>选择与图片最匹配的英语单词</p>
-          <div class="answer-list compact-options">
-            ${options
-              .map(
-                (option) => `
-                  <button class="answer-option" data-action="training-answer" data-answer="${escapeHTML(
-                    option,
-                  )}"><span>${escapeHTML(option)}</span></button>`,
-              )
-              .join("")}
-          </div>
         </div>
       `;
     } else if (session.mode === "listening-choice") {
@@ -6601,7 +6744,6 @@
   function trainingModeTitle(mode) {
     return {
       "word-cards": "单词卡片",
-      "image-association": "图片联想",
       "listening-choice": "听音选义",
       spelling: "拼写训练",
       cloze: "例句填空",
@@ -7634,9 +7776,7 @@
       const word = trainingWord(item);
       const answer = element.dataset.answer || "";
       let correct = false;
-      if (session.mode === "image-association")
-        correct = answer === item;
-      else if (session.mode === "listening-choice")
+      if (session.mode === "listening-choice")
         correct = answer === word?.meaning;
       else if (session.mode === "cloze")
         correct = answer === item;
@@ -8264,6 +8404,34 @@
     }
     if (action === "continue-learning") {
       navigate("study/words");
+      return;
+    }
+    if (action === "shadow-daily-text") {
+      startShadowingAttempt(element.dataset.text || "", element);
+      return;
+    }
+    if (action === "save-daily-content") {
+      const item = DAILY_ENGLISH_CONTENT.find(
+        (entry) =>
+          normalizeTranslationKey(entry.english) ===
+          normalizeTranslationKey(
+            element.closest(".daily-english-card")?.querySelector("h2")
+              ?.textContent || "",
+          ),
+      );
+      if (!item) return;
+      createNote({
+        title: `每日英语：${item.type}`,
+        summary: item.chinese,
+        body: `<p class="english-text">${escapeHTML(
+          item.english,
+        )}</p><p>${escapeHTML(item.chinese)}</p><h3>重点</h3><p>${escapeHTML(
+          item.note,
+        )}</p>`,
+        category: "speaking",
+        tags: ["每日英语", item.type],
+      });
+      showToast("今日英语已加入笔记。", "success");
       return;
     }
     if (
