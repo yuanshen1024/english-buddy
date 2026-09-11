@@ -2146,6 +2146,13 @@
       activePassageId: "passage-station",
       passageFilter: "全部",
     },
+    collectionQuery: "",
+    collectionType: "all",
+    collectionCategory: "全部",
+    collectionPage: 0,
+    activeCollectionId: "collection-0001",
+    collectionFavorites: [],
+    collectionProgress: {},
     literatureQuery: "",
     literatureFilter: "all",
     literatureExamFilter: "all",
@@ -2249,6 +2256,9 @@
 
   let state;
   let speechVoices = [];
+  let articleLibrary = [];
+  let articleLibraryLoading = false;
+  let articleLibraryError = "";
 
   function initializeState() {
     state = loadState();
@@ -2266,7 +2276,10 @@
       state.training.completedTaskIds =
         state.training.completedTaskIds.filter(
           (id) => id !== "image-association",
-        );
+      );
+    }
+    if (state.collectionCategory === "all") {
+      state.collectionCategory = "全部";
     }
     ensureDailyTraining();
   }
@@ -2379,6 +2392,7 @@
     "exams/mistakes": ["考试 / 错题本", "错题本"],
     reading: ["阅读", "英语阅读"],
     "reading/articles": ["阅读 / 英文阅读", "英文阅读"],
+    "reading/collections": ["阅读 / 文章与文献库", "文章与文献库"],
     "reading/literature": ["阅读 / 英文文献", "英文文献"],
     "reading/library": ["阅读 / 英语书籍与资料", "英语书籍与资料"],
     "reading/mine": ["阅读 / 我的文章", "我的文章"],
@@ -2467,6 +2481,7 @@
             "library",
             [
               ["reading/articles", "英文阅读"],
+              ["reading/collections", "文章文献库"],
               ["reading/literature", "英文文献"],
               ["reading/library", "英语书籍与资料"],
               ["reading/mine", "我的文章"],
@@ -2558,6 +2573,7 @@
             ["exams/training", "专项训练", "target"],
             ["exams/mistakes", "错题本", "notebook"],
             ["reading/articles", "英文阅读", "book-open"],
+            ["reading/collections", "文章文献库", "layers"],
             ["reading/literature", "英文文献", "library"],
             ["reading/library", "书籍资料", "layers"],
             ["reading/mine", "我的文章", "file"],
@@ -2664,7 +2680,8 @@
     if (
       !pageMeta[route] &&
       !route.startsWith("notes/") &&
-      !route.startsWith("reading/literature/")
+      !route.startsWith("reading/literature/") &&
+      !route.startsWith("reading/collection/")
     ) {
       navigate("home", { replace: true });
       return;
@@ -2724,6 +2741,9 @@
     if (route === "exams") return renderExamsOverview();
     if (route.startsWith("exams/")) return renderExamPage(route);
     if (route === "reading") return renderReadingOverview();
+    if (route === "reading/collections") return renderArticleLibrary();
+    if (route.startsWith("reading/collection/"))
+      return renderArticleDetail(route.split("/").pop());
     if (route.startsWith("reading/literature/"))
       return renderLiteratureDetail(route.split("/").pop());
     if (route.startsWith("reading/")) return renderReadingPage(route);
@@ -4944,6 +4964,13 @@
               "book-open",
             ],
             [
+              "reading/collections",
+              "文章与文献库",
+              "610 篇原创英语文章与学习文献导读",
+              "22 个主题分类",
+              "layers",
+            ],
+            [
               "reading/literature",
               "英文文献",
               "四级、雅思、托福和学术论文",
@@ -5132,6 +5159,335 @@
               <strong>阅读建议</strong>
               <p>先阅读 Abstract 和 Conclusion，再回到 Method 核对研究过程。</p>
             </div>
+          </aside>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDataLoading(title, description) {
+    return `
+      <div class="page narrow">
+        ${renderPageHeader("Loading Library", title, description)}
+        <div class="panel panel-body">
+          <div class="analysis-loading">
+            <span class="spinner"></span>
+            <span>正在加载内容，请稍候……</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function ensureArticleLibrary() {
+    if (articleLibrary.length) return Promise.resolve(articleLibrary);
+    if (articleLibraryLoading) return articleLibrary._promise;
+    articleLibraryLoading = true;
+    articleLibraryError = "";
+    const promise =
+      window.ENGLISH_BUDDY_ARTICLE_LIBRARY_READY ||
+      Promise.reject(new Error("Article library loader is unavailable."));
+    articleLibrary._promise = promise
+      .then((entries) => {
+        articleLibrary = Array.isArray(entries) ? entries : [];
+        articleLibraryLoading = false;
+        if (getRoute().startsWith("reading/collection")) renderApp();
+        return articleLibrary;
+      })
+      .catch((error) => {
+        articleLibraryLoading = false;
+        articleLibraryError =
+          error?.message || "文章库暂时无法加载，请稍后重试。";
+        if (getRoute().startsWith("reading/collection")) renderApp();
+        throw error;
+      });
+    return articleLibrary._promise;
+  }
+
+  function renderArticleLibrary() {
+    if (!articleLibrary.length) {
+      if (!articleLibraryLoading) ensureArticleLibrary();
+      if (articleLibraryError) {
+        return `
+          <div class="page narrow">
+            <div class="empty-state">
+              <div><span class="empty-icon">${icon(
+                "refresh",
+              )}</span><h3>文章库加载失败</h3><p>${escapeHTML(
+                articleLibraryError,
+              )}</p><button class="btn primary" data-action="retry-article-library">${icon(
+                "refresh",
+              )}重试</button></div>
+            </div>
+          </div>
+        `;
+      }
+      return renderDataLoading(
+        "文章与文献库",
+        "正在准备 610 篇原创英语内容和学习文献导读。",
+      );
+    }
+
+    const categories = [
+      "全部",
+      ...new Set(articleLibrary.map((item) => item.category)),
+    ].sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const query = state.collectionQuery.trim().toLowerCase();
+    const filtered = articleLibrary.filter((item) => {
+      if (
+        state.collectionType !== "all" &&
+        item.type !== state.collectionType
+      )
+        return false;
+      if (
+        state.collectionCategory !== "全部" &&
+        item.category !== state.collectionCategory
+      )
+        return false;
+      return `${item.title} ${item.abstract} ${item.summary} ${item.keywords.join(
+        " ",
+      )} ${item.category} ${item.exam.join(" ")}`
+        .toLowerCase()
+        .includes(query);
+    });
+    const pageSize = 60;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const page = Math.min(state.collectionPage, totalPages - 1);
+    const visible = filtered.slice(page * pageSize, page * pageSize + pageSize);
+    const articleCount = articleLibrary.filter(
+      (item) => item.type === "article",
+    ).length;
+    const literatureCount = articleLibrary.length - articleCount;
+
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          "Reading Collection",
+          "文章与文献库",
+          "610 篇原创英语学习文章与学习文献导读，覆盖 22 个主题和不同英语难度。",
+          `<button class="btn" data-action="random-collection">${icon(
+            "refresh",
+          )}随机阅读</button>
+           <button class="btn soft" data-action="open-speech-settings">${icon(
+             "volume",
+           )}朗读设置</button>`,
+        )}
+        <div class="notes-stats collection-stats">
+          ${[
+            ["内容总量", articleLibrary.length],
+            ["学习文章", articleCount],
+            ["文献导读", literatureCount],
+            ["主题分类", categories.length - 1],
+          ]
+            .map(
+              ([label, value]) =>
+                `<div class="stat-tile"><span>${label}</span><strong>${value}</strong></div>`,
+            )
+            .join("")}
+        </div>
+        <div class="notes-toolbar collection-toolbar">
+          <label class="search-field">
+            ${icon("search")}
+            <input id="collection-search" value="${escapeHTML(
+              state.collectionQuery,
+            )}" placeholder="搜索标题、主题、关键词、考试或内容摘要" />
+          </label>
+          <button class="btn ${
+            state.collectionType === "all" ? "soft" : ""
+          }" data-action="filter-collection-type" data-type="all">全部</button>
+          <button class="btn ${
+            state.collectionType === "article" ? "soft" : ""
+          }" data-action="filter-collection-type" data-type="article">文章</button>
+          <button class="btn ${
+            state.collectionType === "literature" ? "soft" : ""
+          }" data-action="filter-collection-type" data-type="literature">文献导读</button>
+        </div>
+        <div class="resource-filters">
+          ${categories
+            .map(
+              (category) => `
+                <button class="course-chip ${
+                  state.collectionCategory === category ? "active" : ""
+                }" data-action="filter-collection-category" data-category="${escapeHTML(
+                  category,
+                )}">${escapeHTML(category)}</button>`,
+            )
+            .join("")}
+        </div>
+        ${
+          visible.length
+            ? `<div class="collection-grid">
+                ${visible
+                  .map(
+                    (item) => `
+                      <article class="collection-card">
+                        <div class="collection-card-top">
+                          <span class="note-category">${
+                            item.type === "literature"
+                              ? "文献导读"
+                              : "学习文章"
+                          }</span>
+                          <span>${escapeHTML(item.level)} · ${
+                            item.readingMinutes
+                          } 分钟</span>
+                        </div>
+                        <h3>${escapeHTML(item.title)}</h3>
+                        <p>${escapeHTML(item.summary)}</p>
+                        <div class="note-tags">${item.keywords
+                          .slice(0, 3)
+                          .map(
+                            (keyword) =>
+                              `<span class="tag">${escapeHTML(
+                                keyword,
+                              )}</span>`,
+                          )
+                          .join("")}</div>
+                        <div class="collection-card-footer">
+                          <span>${escapeHTML(item.category)}</span>
+                          <div>
+                            <button class="icon-button ${
+                              state.collectionFavorites.includes(item.id)
+                                ? "is-saved"
+                                : ""
+                            }" data-action="toggle-collection-save" data-id="${
+                              item.id
+                            }">${icon("bookmark")}</button>
+                            <button class="btn small primary" data-action="open-collection" data-id="${
+                              item.id
+                            }">阅读</button>
+                          </div>
+                        </div>
+                      </article>`,
+                  )
+                  .join("")}
+              </div>
+              ${
+                totalPages > 1
+                  ? `<div class="vocabulary-pagination collection-pagination">
+                      <button class="btn small" data-action="collection-page-prev" ${
+                        page === 0 ? "disabled" : ""
+                      }>${icon("chevronLeft")}上一页</button>
+                      <span>第 ${page + 1} / ${totalPages} 页</span>
+                      <button class="btn small" data-action="collection-page-next" ${
+                        page >= totalPages - 1 ? "disabled" : ""
+                      }>下一页${icon("chevronRight")}</button>
+                    </div>`
+                  : ""
+              }`
+            : `<div class="empty-state"><div><span class="empty-icon">${icon(
+                "search",
+              )}</span><h3>没有找到匹配内容</h3><p>尝试更换关键词、主题或内容类型。</p></div></div>`
+        }
+      </div>
+    `;
+  }
+
+  function renderArticleDetail(articleId) {
+    if (!articleLibrary.length) {
+      if (!articleLibraryLoading) ensureArticleLibrary();
+      return renderDataLoading(
+        "Article Reader",
+        "正在加载文章内容。",
+      );
+    }
+    const article = articleLibrary.find((item) => item.id === articleId);
+    if (!article) {
+      return `
+        <div class="page narrow">
+          <div class="empty-state"><div><span class="empty-icon">${icon(
+            "file",
+          )}</span><h3>没有找到这篇内容</h3><p>返回文章文献库选择其他内容。</p><button class="btn primary" data-route="reading/collections" data-action="go-route">返回文章库</button></div></div>
+        </div>
+      `;
+    }
+    const saved = state.collectionFavorites.includes(article.id);
+    const progress = state.collectionProgress[article.id] || 0;
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          article.type === "literature" ? "Study Literature" : "English Article",
+          article.title,
+          `${article.sourceType} · ${article.level} · ${article.readingMinutes} 分钟 · ${article.category}`,
+          `<button class="btn" data-route="reading/collections" data-action="go-route">${icon(
+            "arrowLeft",
+          )}返回文章库</button>
+           <button class="btn ${saved ? "soft" : ""}" data-action="toggle-collection-save" data-id="${
+             article.id
+           }">${icon("bookmark")}${saved ? "已收藏" : "收藏"}</button>
+           <button class="btn primary" data-action="add-collection-note" data-id="${
+             article.id
+           }">${icon("plus")}加入笔记</button>`,
+        )}
+        <div class="article-reader-layout">
+          <article class="panel article-reader">
+            <div class="article-reader-meta">
+              <span>${escapeHTML(article.author)}</span>
+              <span>${escapeHTML(article.journal)}</span>
+              <span>${article.year}</span>
+            </div>
+            <div class="paper-abstract">
+              <span class="field-label">英文摘要</span>
+              <p>${escapeHTML(article.abstract)}</p>
+            </div>
+            <div class="passage-actions">
+              <button class="btn primary" data-action="speak-text" data-text="${escapeHTML(
+                article.content.join(" "),
+              )}">${icon("play")}朗读全文</button>
+              <button class="btn soft" data-action="shadow-text" data-text="${escapeHTML(
+                article.content.join(" "),
+              )}">${icon("mic")}跟读全文</button>
+              <button class="btn" data-action="complete-collection" data-id="${
+                article.id
+              }">${icon("check")}标记完成</button>
+            </div>
+            <div class="article-paragraphs">
+              ${article.content
+                .map(
+                  (paragraph, index) => `
+                    <section class="article-paragraph">
+                      <div class="article-paragraph-head">
+                        <span>Paragraph ${index + 1}</span>
+                        <button class="icon-button" data-action="speak-text" data-text="${escapeHTML(
+                          paragraph,
+                        )}">${icon("volume")}</button>
+                      </div>
+                      <p class="english-text">${escapeHTML(paragraph)}</p>
+                      <p class="article-translation">${escapeHTML(
+                        article.translation[index] || "",
+                      )}</p>
+                    </section>`,
+                )
+                .join("")}
+            </div>
+          </article>
+          <aside class="article-reader-side">
+            <section class="panel panel-body">
+              <h3>阅读信息</h3>
+              <div class="progress-row">
+                <span>阅读进度<strong>${progress}%</strong></span>
+                <div class="large-progress"><span style="width:${progress}%"></span></div>
+              </div>
+              <div class="note-tags" style="margin-top:14px">${article.exam
+                .map((exam) => `<span class="tag">${escapeHTML(exam)}</span>`)
+                .join("")}</div>
+            </section>
+            <section class="panel panel-body">
+              <h3>关键词</h3>
+              <div class="note-tags">${article.keywords
+                .map(
+                  (keyword) =>
+                    `<button class="tag tag-button" data-action="paper-keyword" data-word="${escapeHTML(
+                      keyword,
+                    )}">${escapeHTML(keyword)}</button>`,
+                )
+                .join("")}</div>
+            </section>
+            <section class="panel panel-body">
+              <h3>内容说明</h3>
+              <p class="side-empty">${escapeHTML(
+                article.summary,
+              )}</p>
+            </section>
           </aside>
         </div>
       </div>
@@ -9323,6 +9679,107 @@
       renderApp();
       return;
     }
+    if (action === "retry-article-library") {
+      articleLibraryError = "";
+      articleLibrary = [];
+      articleLibraryLoading = false;
+      ensureArticleLibrary();
+      renderApp();
+      return;
+    }
+    if (action === "filter-collection-type") {
+      state.collectionType = element.dataset.type;
+      state.collectionPage = 0;
+      renderApp();
+      return;
+    }
+    if (action === "filter-collection-category") {
+      state.collectionCategory = element.dataset.category;
+      state.collectionPage = 0;
+      renderApp();
+      return;
+    }
+    if (
+      action === "collection-page-prev" ||
+      action === "collection-page-next"
+    ) {
+      state.collectionPage = Math.max(
+        0,
+        state.collectionPage + (action === "collection-page-next" ? 1 : -1),
+      );
+      renderApp();
+      document
+        .querySelector(".collection-toolbar")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (action === "open-collection") {
+      state.activeCollectionId = id;
+      navigate(`reading/collection/${id}`);
+      return;
+    }
+    if (action === "random-collection") {
+      if (!articleLibrary.length) {
+        ensureArticleLibrary();
+        return;
+      }
+      const item =
+        articleLibrary[Math.floor(Math.random() * articleLibrary.length)];
+      navigate(`reading/collection/${item.id}`);
+      return;
+    }
+    if (action === "toggle-collection-save") {
+      if (state.collectionFavorites.includes(id)) {
+        state.collectionFavorites = state.collectionFavorites.filter(
+          (item) => item !== id,
+        );
+      } else {
+        state.collectionFavorites.push(id);
+      }
+      saveState();
+      renderApp();
+      showToast(
+        state.collectionFavorites.includes(id)
+          ? "内容已收藏。"
+          : "已取消收藏。",
+        "success",
+      );
+      return;
+    }
+    if (action === "complete-collection") {
+      state.collectionProgress[id] = 100;
+      saveState();
+      renderApp();
+      showToast("已标记完成阅读。", "success");
+      return;
+    }
+    if (action === "add-collection-note") {
+      const article =
+        articleLibrary.find((item) => item.id === id) ||
+        articleLibrary.find(
+          (item) => item.id === state.activeCollectionId,
+        );
+      if (!article) return;
+      createNote({
+        title: `阅读笔记：${article.title}`,
+        summary: article.summary,
+        body: `<h2>${escapeHTML(
+          article.title,
+        )}</h2><p>${escapeHTML(article.sourceType)} · ${escapeHTML(
+          article.category,
+        )} · ${article.level}</p><h3>英文摘要</h3><p class="english-text">${escapeHTML(
+          article.abstract,
+        )}</p><h3>内容摘要</h3><p>${escapeHTML(
+          article.summary,
+        )}</p><h3>关键词</h3><p>${article.keywords
+          .map((keyword) => escapeHTML(keyword))
+          .join(" · ")}</p>`,
+        category: "reading",
+        tags: ["文章文献库", article.category, ...article.exam],
+      });
+      showToast("内容已加入英语笔记。", "success");
+      return;
+    }
     if (action === "toggle-book-save") {
       const book = state.books.find((item) => item.id === id);
       if (book) {
@@ -10265,6 +10722,20 @@
         const position = target.selectionStart || target.value.length;
         renderApp();
         const next = document.getElementById("automotive-search");
+        if (next) {
+          next.focus();
+          next.setSelectionRange(position, position);
+        }
+      }, 220);
+    }
+    if (target.id === "collection-search") {
+      state.collectionQuery = target.value;
+      state.collectionPage = 0;
+      window.clearTimeout(target._collectionFilterTimer);
+      target._collectionFilterTimer = window.setTimeout(() => {
+        const position = target.selectionStart || target.value.length;
+        renderApp();
+        const next = document.getElementById("collection-search");
         if (next) {
           next.focus();
           next.setSelectionRange(position, position);
