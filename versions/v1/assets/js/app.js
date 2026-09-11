@@ -7,8 +7,14 @@
   const APP_BASE = (
     document.querySelector('meta[name="app-base"]')?.getAttribute("content") || ""
   ).replace(/\/+$/, "");
-  let BUILTIN_VOCABULARY = [];
-  let BUILTIN_WORD_IDS = new Set();
+  const BUILTIN_VOCABULARY =
+    typeof window !== "undefined" &&
+    Array.isArray(window.ENGLISH_BUDDY_VOCABULARY)
+      ? window.ENGLISH_BUDDY_VOCABULARY
+      : [];
+  const BUILTIN_WORD_IDS = new Set(
+    BUILTIN_VOCABULARY.map((word) => word.id),
+  );
 
   const iconPaths = {
     home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
@@ -22,8 +28,6 @@
       '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
     layers:
       '<path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
-    car:
-      '<path d="M5 17h14l1-6-2-5H6l-2 5Z"/><path d="M4 17v3h2v-2h12v2h2v-3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
     notebook:
       '<path d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 2v20"/><path d="M12 7h5"/><path d="M12 11h5"/>',
     user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
@@ -113,425 +117,6 @@
 
   const daysAgo = (days, hours = 0) =>
     new Date(baseNow - days * 86400000 - hours * 3600000).toISOString();
-
-  const CLOZE_EXAMPLES = [
-    { answer: "universe", sentence: "The ______ is very large, and our knowledge of it is still expanding." },
-    { answer: "sustainable", sentence: "The city is investing in ______ public transport." },
-    { answer: "deadline", sentence: "We need to submit the report before the ______." },
-    { answer: "registration", sentence: "______ closes this Friday for new students." },
-    { answer: "available", sentence: "Are you ______ for a meeting tomorrow morning?" },
-    { answer: "opportunity", sentence: "The exchange program offers an ______ to use English." },
-    { answer: "maintain", sentence: "Regular review helps learners ______ their vocabulary." },
-    { answer: "significant", sentence: "There has been a ______ improvement in air quality." },
-    { answer: "inevitable", sentence: "Some degree of change is ______." },
-    { answer: "hypothesis", sentence: "The results support the original ______." },
-  ];
-
-  const SHADOWING_SENTENCES = [
-    "How do I get to the station?",
-    "I would like to improve my English.",
-    "The universe is very large and still expanding.",
-    "Public policy and individual action can reinforce each other.",
-    "Registration closes this Friday, but you need your student card.",
-    "The results support the original hypothesis.",
-  ];
-
-  const TRANSLATION_DICTIONARY = {
-    "我想提高我的英语": "I’d like to improve my English.",
-    "我想提高英语": "I want to improve my English.",
-    "我怎么去车站": "How do I get to the station?",
-    "你明天上午有空吗": "Are you available tomorrow morning?",
-    "我想申请退款": "I would like to request a refund.",
-    "请给我推荐一家餐厅": "Could you recommend a restaurant?",
-    "这有助于提高记忆力": "This helps improve memory.",
-    "人工智能正在改变教育": "Artificial intelligence is changing education.",
-    "环境保护需要每个人参与": "Environmental protection requires everyone’s participation.",
-    "请问注册什么时候截止": "When does registration close?",
-    "我不明白这个问题": "I don’t understand this question.",
-    "你能再说慢一点吗": "Could you speak more slowly?",
-    "这个观点值得进一步讨论": "This idea deserves further discussion.",
-    "研究表明睡眠会影响记忆": "Research shows that sleep affects memory.",
-    "这项政策有利于可持续发展": "This policy supports sustainable development.",
-    "我已经完成今天的学习任务": "I have completed today’s learning tasks.",
-    "i would like to improve my english": "我想提高我的英语。",
-    "how do i get to the station": "我怎么去车站？",
-    "i would like to request a refund": "我想申请退款。",
-    "artificial intelligence is changing education": "人工智能正在改变教育。",
-    "environmental protection requires everyone's participation": "环境保护需要每个人参与。",
-    "research shows that sleep affects memory": "研究表明睡眠会影响记忆。",
-  };
-
-  const READING_PASSAGES = [
-    {
-      id: "passage-station",
-      title: "Asking for Directions",
-      category: "日常",
-      level: "A2",
-      minutes: 2,
-      english: [
-        "Excuse me. How do I get to the station?",
-        "Go straight for two blocks and turn left at the traffic lights.",
-        "The station will be on your right, next to the public library.",
-        "Thank you. How long does it take to walk there?",
-        "It should take about ten minutes.",
-      ],
-      chinese: [
-        "打扰一下，我怎么去车站？",
-        "直走两个街区，然后在红绿灯处左转。",
-        "车站就在你右边，公共图书馆旁边。",
-        "谢谢。步行到那里需要多久？",
-        "大约需要十分钟。",
-      ],
-    },
-    {
-      id: "passage-study",
-      title: "Building a Learning Habit",
-      category: "学习",
-      level: "B1",
-      minutes: 3,
-      english: [
-        "Language learning becomes easier when practice is part of a daily routine.",
-        "Short and regular study sessions are usually more effective than occasional long sessions.",
-        "Reviewing new words at increasing intervals helps move them into long-term memory.",
-        "It is also important to use new vocabulary in speaking and writing.",
-        "Progress may be slow, but consistent effort produces meaningful results.",
-      ],
-      chinese: [
-        "当练习成为日常习惯的一部分时，语言学习会变得更容易。",
-        "短而规律的学习通常比偶尔进行长时间学习更有效。",
-        "按逐渐延长的时间间隔复习新词，有助于把单词转入长期记忆。",
-        "在口语和写作中使用新词汇也很重要。",
-        "进步可能很慢，但持续努力会带来有意义的结果。",
-      ],
-    },
-    {
-      id: "passage-environment",
-      title: "Small Actions, Shared Expectations",
-      category: "考试",
-      level: "B2",
-      minutes: 3,
-      english: [
-        "Many people believe that individual action is too small to affect a global problem.",
-        "However, personal habits can shape what governments and companies consider normal.",
-        "Individual choices therefore do not replace public policy.",
-        "Instead, they can create the social pressure that makes stronger policy possible.",
-        "The most effective approach is to make private action and public systems reinforce each other.",
-      ],
-      chinese: [
-        "许多人认为，个人行动太小，无法影响全球性问题。",
-        "然而，个人习惯可以改变政府和企业眼中的常态。",
-        "因此，个人选择不会替代公共政策。",
-        "相反，它们可以形成推动更强政策的社会压力。",
-        "最有效的方法，是让个人行动与公共制度彼此促进。",
-      ],
-    },
-    {
-      id: "passage-ai",
-      title: "AI and Independent Learning",
-      category: "学术",
-      level: "B2",
-      minutes: 4,
-      english: [
-        "Artificial intelligence can provide immediate feedback and personalized practice.",
-        "However, access to more information does not automatically produce better learning.",
-        "Learners still need clear goals and the ability to judge the quality of information.",
-        "AI is most useful when it supports reflection rather than replacing it.",
-        "The aim is not to depend on the tool, but to become a more independent learner.",
-      ],
-      chinese: [
-        "人工智能可以提供即时反馈和个性化练习。",
-        "然而，获得更多信息并不会自动带来更好的学习。",
-        "学习者仍然需要明确目标，以及判断信息质量的能力。",
-        "当 AI 支持反思而不是替代反思时，它才最有价值。",
-        "目标不是依赖工具，而是成为更独立的学习者。",
-      ],
-    },
-    {
-      id: "passage-sleep",
-      title: "Sleep and Memory",
-      category: "学术",
-      level: "C1",
-      minutes: 4,
-      english: [
-        "Sleep plays an active role in memory consolidation.",
-        "During sleep, the brain reorganizes recently learned information.",
-        "This process can make knowledge easier to retrieve later.",
-        "Students who regularly lose sleep may therefore struggle with recall.",
-        "A consistent sleep schedule can be as important as repeated study.",
-      ],
-      chinese: [
-        "睡眠在记忆巩固中发挥着积极作用。",
-        "睡眠期间，大脑会重新组织最近学习的信息。",
-        "这一过程可以让知识在之后更容易被提取。",
-        "因此，经常睡眠不足的学生可能在回忆信息时遇到困难。",
-        "规律的睡眠时间表可能与反复学习同样重要。",
-      ],
-    },
-    {
-      id: "passage-career",
-      title: "Communicating at Work",
-      category: "商务",
-      level: "B1",
-      minutes: 3,
-      english: [
-        "Clear communication is essential in a successful team.",
-        "Before a meeting, decide what result you want to achieve.",
-        "Listen carefully and ask questions when something is unclear.",
-        "When you disagree, explain your reasoning rather than simply rejecting an idea.",
-        "Good communication turns different opinions into better decisions.",
-      ],
-      chinese: [
-        "清晰的沟通对一个成功的团队至关重要。",
-        "开会前，先确定你希望取得什么结果。",
-        "认真倾听，并在不清楚时提出问题。",
-        "当你不同意时，解释你的理由，而不是简单否定一个想法。",
-        "良好的沟通能把不同意见转化为更好的决策。",
-      ],
-    },
-    {
-      id: "passage-technology",
-      title: "Technology and Everyday Attention",
-      category: "科技",
-      level: "B2",
-      minutes: 4,
-      english: [
-        "Digital tools are designed to make daily tasks faster and more convenient.",
-        "At the same time, many applications compete for a user’s limited attention.",
-        "Notifications can interrupt deep thinking even when a person does not respond immediately.",
-        "A healthier approach is to decide in advance when technology should be available.",
-        "Attention is easier to protect when people set clear boundaries.",
-      ],
-      chinese: [
-        "数字工具的设计目标是让日常任务更快、更方便。",
-        "与此同时，许多应用都在争夺用户有限的注意力。",
-        "即使一个人没有立即回应，通知也可能打断深度思考。",
-        "更健康的方法是提前决定什么时候可以使用科技产品。",
-        "当人们设定清晰边界时，注意力会更容易得到保护。",
-      ],
-    },
-    {
-      id: "passage-health",
-      title: "Movement and Long-Term Health",
-      category: "健康",
-      level: "B1",
-      minutes: 3,
-      english: [
-        "Regular movement supports both physical and mental health.",
-        "It does not always require a long workout or special equipment.",
-        "Walking, stretching and taking short movement breaks can all make a difference.",
-        "The most useful routine is one that is realistic enough to repeat.",
-        "Consistency matters more than a single intense effort.",
-      ],
-      chinese: [
-        "规律活动有助于身心健康。",
-        "它并不总是需要长时间锻炼或特殊设备。",
-        "散步、拉伸和短暂活动休息都能产生作用。",
-        "最有用的习惯，是现实到足以重复执行的习惯。",
-        "持续比一次高强度努力更重要。",
-      ],
-    },
-    {
-      id: "passage-culture",
-      title: "Understanding Cultural Differences",
-      category: "文化",
-      level: "B2",
-      minutes: 4,
-      english: [
-        "Culture influences how people communicate and interpret behavior.",
-        "A direct style may seem efficient in one context and impolite in another.",
-        "Misunderstandings often happen when people assume that their own expectations are universal.",
-        "Asking questions can be more useful than making quick judgments.",
-        "Cultural awareness grows through observation, patience and reflection.",
-      ],
-      chinese: [
-        "文化会影响人们沟通和解读行为的方式。",
-        "直接风格在一种情境中可能显得高效，在另一种情境中却可能显得无礼。",
-        "当人们把自己国家的期待当成普遍规则时，就容易产生误解。",
-        "提问往往比快速下结论更有帮助。",
-        "文化意识通过观察、耐心和反思逐渐形成。",
-      ],
-    },
-    {
-      id: "passage-environment-policy",
-      title: "From Personal Choice to Public Change",
-      category: "环境",
-      level: "C1",
-      minutes: 4,
-      english: [
-        "Environmental progress depends on both personal choices and institutional action.",
-        "Individual habits can signal demand for cleaner products and stronger standards.",
-        "Policy, however, can change entire systems much faster than isolated choices.",
-        "The two levels of action are most effective when they support each other.",
-        "Evidence-based policy can turn widespread concern into measurable change.",
-      ],
-      chinese: [
-        "环境进步既依赖个人选择，也依赖制度行动。",
-        "个人习惯可以表达对更清洁产品和更严格标准的需求。",
-        "不过，政策改变整个系统的速度远快于孤立的选择。",
-        "当两个层面的行动互相支持时，效果最好。",
-        "基于证据的政策可以把广泛担忧转化为可衡量的改变。",
-      ],
-    },
-    {
-      id: "passage-auto-service",
-      title: "Diagnosing an Engine Warning Light",
-      category: "汽车",
-      level: "B1",
-      minutes: 4,
-      english: [
-        "When the engine warning light appears, the vehicle may have stored a diagnostic trouble code.",
-        "A technician connects a scan tool to the diagnostic connector and reads the fault code.",
-        "The code identifies the affected system, but it does not always identify the failed component.",
-        "The technician then checks live sensor data, wiring and mechanical condition.",
-        "After the repair, the system is tested again to confirm that the fault has been cleared.",
-      ],
-      chinese: [
-        "当发动机故障灯亮起时，车辆可能已经存储了诊断故障码。",
-        "维修技师将诊断仪连接到诊断接口并读取故障码。",
-        "故障码可以指出受影响的系统，但不一定直接指出损坏的部件。",
-        "随后技师需要检查传感器实时数据、线路和机械状况。",
-        "维修完成后，需要再次测试系统，确认故障已经排除。",
-      ],
-    },
-    {
-      id: "passage-auto-ev",
-      title: "Electric Vehicle Charging",
-      category: "汽车",
-      level: "B2",
-      minutes: 4,
-      english: [
-        "Electric vehicles store energy in a high-voltage battery pack.",
-        "The battery management system monitors voltage, temperature and state of charge.",
-        "Fast charging reduces charging time but can increase thermal stress on the battery.",
-        "Vehicle-to-grid technology may allow electric cars to support the power grid.",
-        "Charging performance depends on the vehicle, charger and battery condition.",
-      ],
-      chinese: [
-        "电动汽车将能量储存在高压电池包中。",
-        "电池管理系统会监测电压、温度和荷电状态。",
-        "快速充电可以缩短充电时间，但可能增加电池的热压力。",
-        "车辆到电网技术可以让电动汽车为电网提供支持。",
-        "充电性能取决于车辆、充电设备和电池状态。",
-      ],
-    },
-    {
-      id: "passage-auto-adas",
-      title: "Driver Assistance Systems",
-      category: "汽车",
-      level: "B2",
-      minutes: 4,
-      english: [
-        "Advanced driver assistance systems use cameras, radar and other sensors to understand the road.",
-        "Adaptive cruise control can adjust speed to maintain a safe distance from the vehicle ahead.",
-        "Lane keeping assistance monitors lane markings and can provide steering support.",
-        "These systems assist the driver, but they do not replace driver responsibility.",
-        "Clear sensor data and reliable software are essential for safe operation.",
-      ],
-      chinese: [
-        "高级驾驶辅助系统使用摄像头、雷达和其他传感器理解道路环境。",
-        "自适应巡航控制可以调整车速，与前车保持安全距离。",
-        "车道保持辅助会监测车道线，并提供转向支持。",
-        "这些系统辅助驾驶员，但不能替代驾驶员责任。",
-        "清晰的传感器数据和可靠的软件对安全运行至关重要。",
-      ],
-    },
-    {
-      id: "passage-auto-manufacturing",
-      title: "Vehicle Manufacturing and Quality",
-      category: "汽车",
-      level: "C1",
-      minutes: 5,
-      english: [
-        "Vehicle manufacturing combines stamping, welding, painting and final assembly.",
-        "Automotive engineers use computer-aided design and simulation before a prototype is built.",
-        "Tolerance control is critical because small variations can affect fit, safety and performance.",
-        "Assembly-line workers and automated systems follow standardized work instructions.",
-        "Quality control continues through production, testing and after-sales feedback.",
-      ],
-      chinese: [
-        "汽车制造包括冲压、焊接、涂装和总装。",
-        "汽车工程师会在制造样车之前使用计算机辅助设计和仿真。",
-        "公差控制非常关键，因为微小偏差会影响装配、安全性和性能。",
-        "装配线员工和自动化系统按照标准化作业指导书操作。",
-        "质量控制贯穿生产、测试和售后反馈全过程。",
-      ],
-    },
-  ];
-
-  const DAILY_ENGLISH_CONTENT = [
-    {
-      english: "Small steps every day lead to big changes.",
-      chinese: "每天迈出一小步，最终会带来巨大的改变。",
-      type: "学习动力",
-      note: "lead to 表示“导致；带来”，后面接名词或动名词。",
-    },
-    {
-      english: "Could you say that again in another way?",
-      chinese: "你能换一种方式再说一遍吗？",
-      type: "课堂口语",
-      note: "in another way 是请求换一种表达方式的自然说法。",
-    },
-    {
-      english: "I’m not sure I follow your point.",
-      chinese: "我不太确定自己是否理解了你的观点。",
-      type: "讨论表达",
-      note: "比 I don’t understand 更委婉，适合会议和课堂讨论。",
-    },
-    {
-      english: "The evidence suggests a different conclusion.",
-      chinese: "这些证据指向一个不同的结论。",
-      type: "学术表达",
-      note: "suggest 在这里表示“表明；暗示”，常用于学术写作。",
-    },
-    {
-      english: "We need to weigh the benefits against the costs.",
-      chinese: "我们需要权衡收益与成本。",
-      type: "写作表达",
-      note: "weigh A against B 表示“权衡 A 与 B”。",
-    },
-    {
-      english: "Would you mind speaking a little more slowly?",
-      chinese: "你介意说得再慢一点吗？",
-      type: "听力沟通",
-      note: "Would you mind + doing 是礼貌请求的常用结构。",
-    },
-    {
-      english: "The findings are consistent with previous research.",
-      chinese: "这些发现与先前的研究一致。",
-      type: "文献阅读",
-      note: "be consistent with 表示“与……一致”。",
-    },
-    {
-      english: "I’d like to add one more point.",
-      chinese: "我想再补充一点。",
-      type: "商务口语",
-      note: "适合会议中承接讨论并增加自己的观点。",
-    },
-    {
-      english: "It depends on how we define success.",
-      chinese: "这取决于我们如何定义成功。",
-      type: "观点表达",
-      note: "depend on 后面可接名词、代词或由 how/what 引导的从句。",
-    },
-    {
-      english: "Practice becomes easier when it becomes a habit.",
-      chinese: "当练习成为习惯时，它就会变得更容易。",
-      type: "学习方法",
-      note: "when 引导时间状语从句，两个 becomes 形成结构呼应。",
-    },
-    {
-      english: "The main advantage is that it saves time.",
-      chinese: "主要优点是它可以节省时间。",
-      type: "议论文句型",
-      note: "The main advantage is that… 适合说明观点或优点。",
-    },
-    {
-      english: "Let’s review what we learned yesterday.",
-      chinese: "让我们复习一下昨天学过的内容。",
-      type: "课堂用语",
-      note: "what we learned yesterday 是名词性从句，作 review 的宾语。",
-    },
-  ];
 
   const defaultState = {
     notes: [
@@ -2114,45 +1699,11 @@
     wordStatusFilter: "all",
     dailyWordIds: [],
     dailyCompletedIds: [],
-    automotiveQuery: "",
-    automotiveCategory: "全部",
-    automotivePage: 0,
     speech: {
       accent: "en-GB",
       rate: 0.92,
       voiceURI: "",
     },
-    training: {
-      dailyDate: "",
-      completedTaskIds: [],
-      session: {
-        mode: "",
-        index: 0,
-        score: 0,
-        items: [],
-        revealed: false,
-        feedback: "",
-      },
-    },
-    translation: {
-      direction: "zh-en",
-      input: "我想提高我的英语。",
-      output:
-        "I’d like to improve my English. 这是一个自然、礼貌的表达，适合口语和目标陈述。",
-      status: "idle",
-      error: "",
-      style: "natural",
-      history: [],
-      activePassageId: "passage-station",
-      passageFilter: "全部",
-    },
-    collectionQuery: "",
-    collectionType: "all",
-    collectionCategory: "全部",
-    collectionPage: 0,
-    activeCollectionId: "collection-0001",
-    collectionFavorites: [],
-    collectionProgress: {},
     literatureQuery: "",
     literatureFilter: "all",
     literatureExamFilter: "all",
@@ -2233,68 +1784,14 @@
         review: { ...fallback.review, ...(stored.review || {}) },
         vocabTest: { ...fallback.vocabTest, ...(stored.vocabTest || {}) },
         speech: { ...fallback.speech, ...(stored.speech || {}) },
-        training: {
-          ...fallback.training,
-          ...(stored.training || {}),
-          session: {
-            ...fallback.training.session,
-            ...(stored.training?.session || {}),
-          },
-        },
-        translation: {
-          ...fallback.translation,
-          ...(stored.translation || {}),
-          history: Array.isArray(stored.translation?.history)
-            ? stored.translation.history
-            : fallback.translation.history,
-        },
       };
     } catch {
       return cloneDefaultState();
     }
   }
 
-  let state;
+  let state = loadState();
   let speechVoices = [];
-  let articleLibrary = [];
-  let articleLibraryLoading = false;
-  let articleLibraryError = "";
-
-  function initializeState() {
-    state = loadState();
-    if (state.training?.session?.mode === "image-association") {
-      state.training.session = {
-        mode: "",
-        index: 0,
-        score: 0,
-        items: [],
-        revealed: false,
-        feedback: "",
-      };
-    }
-    if (Array.isArray(state.training?.completedTaskIds)) {
-      state.training.completedTaskIds =
-        state.training.completedTaskIds.filter(
-          (id) => id !== "image-association",
-      );
-    }
-    if (state.collectionCategory === "all") {
-      state.collectionCategory = "全部";
-    }
-    ensureDailyTraining();
-  }
-
-  function todayKey() {
-    return new Date().toISOString().slice(0, 10);
-  }
-
-  function ensureDailyTraining() {
-    const today = todayKey();
-    if (state.training.dailyDate !== today) {
-      state.training.dailyDate = today;
-      state.training.completedTaskIds = [];
-    }
-  }
 
   const saveState = () => {
     try {
@@ -2377,11 +1874,9 @@
     home: ["首页", "今天学什么"],
     study: ["学习", "学习中心"],
     "study/words": ["学习 / 单词", "单词学习"],
-    "study/training": ["学习 / 训练中心", "单词训练中心"],
-    "study/automotive": ["学习 / 汽车专业英语", "汽车专业英语"],
     "study/listening": ["学习 / 听力", "听力训练"],
     "study/speaking": ["学习 / 朗读", "跟读朗读"],
-    "study/translation": ["学习 / 翻译与英语朗读", "翻译与英语朗读"],
+    "study/translation": ["学习 / 翻译", "翻译练习"],
     "study/plan": ["学习 / 学习计划", "学习计划"],
     speaking: ["AI 口语", "AI 英语口语"],
     exams: ["英语考试", "考试中心"],
@@ -2392,7 +1887,6 @@
     "exams/mistakes": ["考试 / 错题本", "错题本"],
     reading: ["阅读", "英语阅读"],
     "reading/articles": ["阅读 / 英文阅读", "英文阅读"],
-    "reading/collections": ["阅读 / 文章与文献库", "文章与文献库"],
     "reading/literature": ["阅读 / 英文文献", "英文文献"],
     "reading/library": ["阅读 / 英语书籍与资料", "英语书籍与资料"],
     "reading/mine": ["阅读 / 我的文章", "我的文章"],
@@ -2454,8 +1948,6 @@
             "book-open",
             [
               ["study/words", "单词"],
-              ["study/training", "训练中心"],
-              ["study/automotive", "汽车英语"],
               ["study/listening", "听力"],
               ["study/speaking", "朗读"],
               ["study/translation", "翻译"],
@@ -2481,7 +1973,6 @@
             "library",
             [
               ["reading/articles", "英文阅读"],
-              ["reading/collections", "文章文献库"],
               ["reading/literature", "英文文献"],
               ["reading/library", "英语书籍与资料"],
               ["reading/mine", "我的文章"],
@@ -2561,8 +2052,6 @@
         <div class="mobile-more-grid">
           ${[
             ["study/words", "单词", "type"],
-            ["study/training", "训练中心", "target"],
-            ["study/automotive", "汽车英语", "car"],
             ["study/listening", "听力", "headphones"],
             ["study/speaking", "朗读", "mic"],
             ["study/translation", "翻译", "languages"],
@@ -2573,7 +2062,6 @@
             ["exams/training", "专项训练", "target"],
             ["exams/mistakes", "错题本", "notebook"],
             ["reading/articles", "英文阅读", "book-open"],
-            ["reading/collections", "文章文献库", "layers"],
             ["reading/literature", "英文文献", "library"],
             ["reading/library", "书籍资料", "layers"],
             ["reading/mine", "我的文章", "file"],
@@ -2680,8 +2168,7 @@
     if (
       !pageMeta[route] &&
       !route.startsWith("notes/") &&
-      !route.startsWith("reading/literature/") &&
-      !route.startsWith("reading/collection/")
+      !route.startsWith("reading/literature/")
     ) {
       navigate("home", { replace: true });
       return;
@@ -2735,15 +2222,11 @@
   function renderPage(route) {
     if (route === "home") return renderHomePage();
     if (route === "study") return renderStudyOverview();
-    if (route === "study/automotive") return renderAutomotiveWorkspace();
     if (route.startsWith("study/")) return renderStudyPage(route);
     if (route === "speaking") return renderSpeakingPage();
     if (route === "exams") return renderExamsOverview();
     if (route.startsWith("exams/")) return renderExamPage(route);
     if (route === "reading") return renderReadingOverview();
-    if (route === "reading/collections") return renderArticleLibrary();
-    if (route.startsWith("reading/collection/"))
-      return renderArticleDetail(route.split("/").pop());
     if (route.startsWith("reading/literature/"))
       return renderLiteratureDetail(route.split("/").pop());
     if (route.startsWith("reading/")) return renderReadingPage(route);
@@ -2778,10 +2261,6 @@
   }
 
   function renderHomePage() {
-    const dailyContent =
-      DAILY_ENGLISH_CONTENT[
-        Math.floor(baseNow / 86400000) % DAILY_ENGLISH_CONTENT.length
-      ];
     const recentNotes = [...state.notes]
       .filter((note) => !note.archived)
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
@@ -2804,33 +2283,6 @@
           </div>
         </section>
 
-        <section class="section daily-english-section">
-          <div class="panel daily-english-card">
-            <div class="daily-english-copy">
-              <div class="eyebrow">TODAY'S ENGLISH</div>
-              <h2>${escapeHTML(dailyContent.english)}</h2>
-              <p>${escapeHTML(dailyContent.chinese)}</p>
-              <div class="daily-english-note">
-                <span class="note-category">${escapeHTML(
-                  dailyContent.type,
-                )}</span>
-                <span>${escapeHTML(dailyContent.note)}</span>
-              </div>
-            </div>
-            <div class="daily-english-actions">
-              <button class="btn primary" data-action="speak-text" data-text="${escapeHTML(
-                dailyContent.english,
-              )}">${icon("volume")}朗读</button>
-              <button class="btn" data-action="shadow-daily-text" data-text="${escapeHTML(
-                dailyContent.english,
-              )}">${icon("mic")}跟读</button>
-              <button class="btn soft" data-action="save-daily-content">${icon(
-                "plus",
-              )}加入笔记</button>
-            </div>
-          </div>
-        </section>
-
         <section class="section">
           <div class="section-head">
             <div><h2>今日任务</h2><p>约 28 分钟，按自己的节奏完成</p></div>
@@ -2840,13 +2292,7 @@
           </div>
           <div class="daily-grid">
             ${[
-              [
-                "training",
-                "单词训练",
-                "卡片 · 听力 · 拼写 · 跟读",
-                35,
-                "target",
-              ],
+              ["words", "单词", "复习 20 个词", 35, "type"],
               ["listening", "听力", "校园注册场景", 0, "headphones"],
               ["articles", "阅读", "环境保护短文", 0, "book-open"],
               ["speaking", "口语", "问路对话", 0, "mic"],
@@ -3027,43 +2473,6 @@
     return stripHTML(html).length;
   }
 
-  function noteReadingMinutes(note) {
-    return Math.max(1, Math.ceil(wordCount(note.body) / 450));
-  }
-
-  function getRelatedNotes(note) {
-    return state.notes
-      .filter(
-        (item) =>
-          item.id !== note.id &&
-          !item.archived &&
-          (item.category === note.category ||
-            (item.tags || []).some((tag) => (note.tags || []).includes(tag))),
-      )
-      .map((item) => ({
-        note: item,
-        score:
-          (item.category === note.category ? 2 : 0) +
-          (item.tags || []).filter((tag) =>
-            (note.tags || []).includes(tag),
-          ).length,
-      }))
-      .sort(
-        (a, b) =>
-          b.score - a.score ||
-          new Date(b.note.updatedAt) - new Date(a.note.updatedAt),
-      )
-      .slice(0, 4)
-      .map((item) => item.note);
-  }
-
-  function getNoteOutline(note) {
-    return [...String(note.body || "").matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)]
-      .map((match) => stripHTML(match[1]))
-      .filter(Boolean)
-      .slice(0, 8);
-  }
-
   function formatWordForms(forms) {
     const labels = {
       p: "过去式",
@@ -3124,15 +2533,9 @@
             <button class="btn" data-action="open-quick-record">${icon(
               "clock",
             )}快速记录</button>
-            <button class="btn" data-action="random-note-review">${icon(
-              "refresh",
-            )}今日回忆</button>
             <button class="btn soft" data-action="open-ai-organize">${icon(
               "sparkles",
             )}AI 整理</button>
-            <button class="btn soft" data-action="export-all-notes">${icon(
-              "file",
-            )}导出全部</button>
             <button class="btn primary" data-action="new-note">${icon(
               "plus",
             )}新建笔记</button>
@@ -3310,8 +2713,6 @@
         </div>
       `;
     }
-    const outline = getNoteOutline(note);
-    const relatedNotes = getRelatedNotes(note);
     return `
       <div class="page">
         <div class="editor-shell">
@@ -3338,8 +2739,6 @@
                 <span>${formatRelative(note.updatedAt)}更新</span>
                 <span>·</span>
                 <span>${wordCount(note.body)} 字</span>
-                <span>·</span>
-                <span>约 ${noteReadingMinutes(note)} 分钟阅读</span>
               </div>
               <div class="editor-toolbar" role="toolbar" aria-label="笔记格式">
                 ${[
@@ -3378,12 +2777,6 @@
                 )}</button>
                 <button class="toolbar-button" data-action="insert-english-block" title="英语内容块">${icon(
                   "languages",
-                )}</button>
-                <button class="toolbar-button" data-action="open-note-templates" title="笔记模板">${icon(
-                  "layers",
-                )}</button>
-                <button class="toolbar-button" data-action="ai-note-summary" title="AI 总结笔记">${icon(
-                  "sparkles",
                 )}</button>
               </div>
               <div
@@ -3452,44 +2845,6 @@
               </section>
 
               <section class="panel side-panel">
-                <h3>${icon("list")}笔记大纲</h3>
-                ${
-                  outline.length
-                    ? `<div class="note-outline-list">${outline
-                        .map(
-                          (heading, index) =>
-                            `<button data-action="scroll-note-heading" data-index="${index}"><span>${
-                              index + 1
-                            }</span>${escapeHTML(heading)}</button>`,
-                        )
-                        .join("")}</div>`
-                    : `<p class="side-empty">添加标题后会自动生成笔记大纲。</p>`
-                }
-              </section>
-
-              <section class="panel side-panel">
-                <h3>${icon("layers")}相关笔记</h3>
-                ${
-                  relatedNotes.length
-                    ? `<div class="related-note-list">${relatedNotes
-                        .map(
-                          (item) => `
-                            <button data-action="open-note" data-id="${
-                              item.id
-                            }">
-                              <strong>${escapeHTML(item.title)}</strong>
-                              <span>${escapeHTML(
-                                (item.tags || []).slice(0, 3).join(" · ") ||
-                                  categoryName(item.category),
-                              )}</span>
-                            </button>`,
-                        )
-                        .join("")}</div>`
-                    : `<p class="side-empty">还没有同分类或相同标签的笔记。</p>`
-                }
-              </section>
-
-              <section class="panel side-panel">
                 <h3>${icon("target")}笔记操作</h3>
                 <div class="editor-actions">
                   <button class="btn small ${
@@ -3514,14 +2869,6 @@
                 }" data-id="${note.id}">${icon("archive")}${
                   note.archived ? "恢复笔记" : "归档笔记"
                 }</button>
-                <div class="editor-actions" style="margin-top:7px">
-                  <button class="btn small" data-action="duplicate-note" data-id="${
-                    note.id
-                  }">${icon("layers")}复制</button>
-                  <button class="btn small" data-action="export-note-markdown" data-id="${
-                    note.id
-                  }">${icon("file")}Markdown</button>
-                </div>
               </section>
 
               <button class="btn danger" data-action="delete-note" data-id="${
@@ -3625,20 +2972,6 @@
                 "用例句和发音建立真实语境",
                 "今日 20 词",
                 "type",
-              ],
-              [
-                "study/training",
-                "训练中心",
-                "卡片、听音、拼写、填空和跟读",
-                "每日 7 项任务",
-                "target",
-              ],
-              [
-                "study/automotive",
-                "汽车专业英语",
-                "整车、发动机、新能源、维修与制造术语",
-                "230 个专业词条",
-                "car",
               ],
               [
                 "study/listening",
@@ -3985,560 +3318,10 @@
     `;
   }
 
-  function renderStudyTraining() {
-    ensureDailyTraining();
-    const modes = [
-      {
-        id: "word-cards",
-        title: "单词卡片",
-        description: "正面单词、背面释义，快速建立识别记忆。",
-        icon: "layers",
-        group: "输入",
-        count: 12,
-      },
-      {
-        id: "listening-choice",
-        title: "听音选义",
-        description: "听英语单词，从多个释义中选出正确答案。",
-        icon: "headphones",
-        group: "听力",
-        count: 10,
-      },
-      {
-        id: "spelling",
-        title: "拼写训练",
-        description: "根据释义和词频，完整拼写英文单词。",
-        icon: "edit",
-        group: "输出",
-        count: 20,
-      },
-      {
-        id: "cloze",
-        title: "例句填空",
-        description: "在真实句子中选择最合适的单词。",
-        icon: "quote",
-        group: "输出",
-        count: 10,
-      },
-      {
-        id: "shadowing",
-        title: "发音跟读",
-        description: "先听标准朗读，再录音跟读并自评。",
-        icon: "mic",
-        group: "口语",
-        count: 6,
-      },
-      {
-        id: "spaced-review",
-        title: "间隔复习",
-        description: "按遗忘时间安排复习，调整下一次间隔。",
-        icon: "refresh",
-        group: "复习",
-        count: state.words.filter(
-          (word) =>
-            word.reviewAt &&
-            new Date(word.reviewAt).getTime() <= Date.now(),
-        ).length,
-      },
-      {
-        id: "daily-words",
-        title: "每日新词",
-        description: "按词频和考试价值学习今天的 50 个新词。",
-        icon: "calendar",
-        group: "计划",
-        count: 50,
-      },
-    ];
-    const completed = state.training.completedTaskIds.length;
-    const progress = Math.round((completed / modes.length) * 100);
-    const dueCount = modes.find((mode) => mode.id === "spaced-review")?.count || 0;
-
-    return `
-      <div class="page">
-        ${renderPageHeader(
-          "Daily Training",
-          "单词训练中心",
-          "每天用一组短训练完成输入、输出、发音和复习，所有结果都会回写到单词掌握度。",
-          `<button class="btn" data-action="start-daily-words">${icon(
-            "calendar",
-          )}开始今日 50 词</button>
-           <button class="btn soft" data-action="open-speech-settings">${icon(
-             "volume",
-           )}朗读设置</button>`,
-        )}
-
-        <section class="panel training-dashboard">
-          <div>
-            <div class="eyebrow">TODAY'S PROGRESS</div>
-            <h2>今日完成 ${completed} / ${modes.length} 项训练</h2>
-            <p>完成全部训练约需 20 分钟。系统会根据结果自动调整下次复习时间。</p>
-          </div>
-          <div class="training-progress-ring">
-            <div class="progress-ring"><strong>${progress}%</strong></div>
-          </div>
-          <div class="training-dashboard-meta">
-            <span>${icon("refresh")} 待复习 ${dueCount} 词</span>
-            <span>${icon("flame")} 连续学习 12 天</span>
-          </div>
-        </section>
-
-        ${["输入", "听力", "输出", "口语", "复习", "计划"]
-          .map(
-            (group) => `
-              <section class="section">
-                <div class="section-head">
-                  <div><h2>${group}训练</h2><p>${trainingGroupDescription(
-                    group,
-                  )}</p></div>
-                </div>
-                <div class="training-grid">
-                  ${modes
-                    .filter((mode) => mode.group === group)
-                    .map((mode) => {
-                      const isDone =
-                        state.training.completedTaskIds.includes(mode.id);
-                      return `
-                        <article class="training-card ${
-                          isDone ? "completed" : ""
-                        }">
-                          <div class="training-card-top">
-                            <span class="task-icon">${icon(mode.icon)}</span>
-                            ${
-                              isDone
-                                ? `<span class="training-done">${icon(
-                                    "check",
-                                  )}已完成</span>`
-                                : `<span class="note-category">${mode.count} 项</span>`
-                            }
-                          </div>
-                          <h3>${mode.title}</h3>
-                          <p>${mode.description}</p>
-                          <button class="btn ${
-                            isDone ? "ghost" : "primary"
-                          }" data-action="start-training-mode" data-mode="${
-                            mode.id
-                          }">${icon(
-                            isDone ? "refresh" : "play",
-                          )}${isDone ? "再练一次" : "开始训练"}</button>
-                        </article>
-                      `;
-                    })
-                    .join("")}
-                </div>
-              </section>`,
-          )
-          .join("")}
-      </div>
-    `;
-  }
-
-  function trainingGroupDescription(group) {
-    return {
-      输入: "先建立音、形、义的初步连接。",
-      听力: "把拼写和声音直接连接起来。",
-      输出: "通过拼写和语境使用检验掌握程度。",
-      口语: "朗读、跟读并关注语音节奏。",
-      复习: "使用间隔复习减少遗忘。",
-      计划: "根据词频和考试目标安排每日任务。",
-    }[group];
-  }
-
-  function renderTranslationWorkspace() {
-    const translation = state.translation;
-    const fromLanguage =
-      translation.direction === "zh-en" ? "中文" : "English";
-    const toLanguage =
-      translation.direction === "zh-en" ? "English" : "中文";
-    const categories = [
-      "全部",
-      ...new Set(READING_PASSAGES.map((passage) => passage.category)),
-    ];
-    const passages = READING_PASSAGES.filter(
-      (passage) =>
-        translation.passageFilter === "全部" ||
-        passage.category === translation.passageFilter,
-    );
-    const activePassage =
-      READING_PASSAGES.find(
-        (passage) => passage.id === translation.activePassageId,
-      ) ||
-      passages[0] ||
-      READING_PASSAGES[0];
-    const fullEnglish = activePassage.english.join(" ");
-
-    return `
-      <div class="page">
-        ${renderPageHeader(
-          "Translation & Reading",
-          "翻译与英语朗读",
-          "支持中英双向翻译、在线翻译、历史记录、朗读跟读和学习笔记联动。",
-          `<button class="btn" data-action="swap-translation-direction">${icon(
-            "refresh",
-          )}切换方向</button>
-           <button class="btn soft" data-action="open-speech-settings">${icon(
-             "volume",
-           )}朗读设置</button>`,
-        )}
-
-        <section class="translation-workbench">
-          <div class="translation-direction">
-            <button class="course-chip ${
-              translation.direction === "zh-en" ? "active" : ""
-            }" data-action="set-translation-direction" data-direction="zh-en">中译英</button>
-            <button class="course-chip ${
-              translation.direction === "en-zh" ? "active" : ""
-            }" data-action="set-translation-direction" data-direction="en-zh">英译中</button>
-            <span>${fromLanguage} → ${toLanguage}</span>
-          </div>
-          <div class="translation-columns">
-            <article class="panel translation-box">
-              <div class="translation-box-head">
-                <div><span class="field-label">原文</span><strong>${fromLanguage}</strong></div>
-                <span>${translation.input.length} 字符</span>
-              </div>
-              <textarea id="translation-input" class="translation-textarea" placeholder="${
-                translation.direction === "zh-en"
-                  ? "输入中文，例如：我想提高我的英语。"
-                  : "Enter English text here."
-              }">${escapeHTML(translation.input)}</textarea>
-              <div class="translation-box-actions">
-                <button class="btn primary" data-action="translate-submit">${icon(
-                  "languages",
-                )}${translation.status === "loading" ? "正在翻译…" : "开始翻译"}</button>
-                <button class="btn" data-action="speak-translation-input">${icon(
-                  "volume",
-                )}朗读原文</button>
-                <button class="btn ghost" data-action="clear-translation">清空</button>
-              </div>
-            </article>
-            <article class="panel translation-box output-box">
-              <div class="translation-box-head">
-                <div><span class="field-label">译文</span><strong>${toLanguage}</strong></div>
-                <span>${translation.status === "success" ? "翻译完成" : ""}</span>
-              </div>
-              <div class="translation-output">
-                ${
-                  translation.status === "loading"
-                    ? `<div class="analysis-loading"><span class="spinner"></span><span>正在翻译，请稍候……</span></div>`
-                    : translation.status === "error"
-                      ? `<div class="translation-error"><span class="empty-icon">${icon(
-                          "refresh",
-                        )}</span><h3>暂时无法完成翻译</h3><p>${escapeHTML(
-                          translation.error ||
-                            "请检查网络或稍后重试。",
-                        )}</p><button class="btn primary" data-action="translate-submit">${icon(
-                          "refresh",
-                        )}重试</button></div>`
-                      : `<p>${escapeHTML(
-                          translation.output ||
-                            "翻译结果会显示在这里。",
-                        )}</p>`
-                }
-              </div>
-              <div class="translation-box-actions">
-                <button class="btn soft" data-action="speak-translation-output" ${
-                  translation.output ? "" : "disabled"
-                }>${icon("volume")}朗读译文</button>
-                <button class="btn" data-action="copy-translation" ${
-                  translation.output ? "" : "disabled"
-                }>${icon("file")}复制译文</button>
-                <button class="btn" data-action="save-translation-note" ${
-                  translation.output ? "" : "disabled"
-                }>${icon("plus")}加入笔记</button>
-              </div>
-            </article>
-          </div>
-          ${
-            translation.history.length
-              ? `<div class="translation-history">
-                  <span class="field-label">最近翻译</span>
-                  <div class="translation-history-list">
-                    ${translation.history
-                      .slice(0, 6)
-                      .map(
-                        (item, index) => `
-                          <button data-action="load-translation-history" data-index="${index}">
-                            <strong>${escapeHTML(
-                              item.input.slice(0, 32),
-                            )}</strong>
-                            <span>${escapeHTML(
-                              item.output.slice(0, 42),
-                            )}</span>
-                          </button>`,
-                      )
-                      .join("")}
-                  </div>
-                </div>`
-              : ""
-          }
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <div><h2>英语朗读语料库</h2><p>按场景选择短文，支持逐句翻译、标准朗读和跟读评分。</p></div>
-          </div>
-          <div class="resource-filters">
-            ${categories
-              .map(
-                (category) => `
-                  <button class="course-chip ${
-                    translation.passageFilter === category ? "active" : ""
-                  }" data-action="filter-passages" data-filter="${escapeHTML(
-                    category,
-                  )}">${escapeHTML(category)}</button>`,
-              )
-              .join("")}
-          </div>
-          <div class="reading-library-layout">
-            <aside class="panel reading-passage-list">
-              ${passages
-                .map(
-                  (passage) => `
-                    <button class="reading-passage-item ${
-                      passage.id === activePassage.id ? "active" : ""
-                    }" data-action="select-reading-passage" data-id="${
-                      passage.id
-                    }">
-                      <span class="note-category">${escapeHTML(
-                        passage.category,
-                      )}</span>
-                      <strong>${escapeHTML(passage.title)}</strong>
-                      <small>${passage.level} · ${passage.minutes} 分钟</small>
-                    </button>`,
-                )
-                .join("")}
-            </aside>
-            <article class="panel reading-passage-content">
-              <div class="section-head">
-                <div><h2>${escapeHTML(
-                  activePassage.title,
-                )}</h2><p>${escapeHTML(
-                  activePassage.category,
-                )} · ${activePassage.level} · ${activePassage.minutes} 分钟</p></div>
-                <span class="tag">${activePassage.english.length} 句</span>
-              </div>
-              <div class="passage-actions">
-                <button class="btn primary" data-action="speak-passage" data-id="${
-                  activePassage.id
-                }">${icon("play")}朗读全文</button>
-                <button class="btn soft" data-action="shadow-passage" data-id="${
-                  activePassage.id
-                }">${icon("mic")}跟读全文</button>
-                <button class="btn" data-action="add-passage-note" data-id="${
-                  activePassage.id
-                }">${icon("plus")}加入笔记</button>
-              </div>
-              <div class="passage-sentences">
-                ${activePassage.english
-                  .map(
-                    (sentence, index) => `
-                      <div class="passage-sentence">
-                        <span class="passage-index">${index + 1}</span>
-                        <div>
-                          <p class="english-text">${escapeHTML(
-                            sentence,
-                          )}</p>
-                          <p class="passage-translation">${escapeHTML(
-                            activePassage.chinese[index] || "",
-                          )}</p>
-                        </div>
-                        <div class="passage-sentence-actions">
-                          <button class="icon-button" data-action="speak-text" data-text="${escapeHTML(
-                            sentence,
-                          )}" title="朗读句子">${icon("volume")}</button>
-                          <button class="icon-button" data-action="shadow-text" data-text="${escapeHTML(
-                            sentence,
-                          )}" title="跟读句子">${icon("mic")}</button>
-                        </div>
-                      </div>`,
-                  )
-                  .join("")}
-              </div>
-            </article>
-          </div>
-        </section>
-      </div>
-    `;
-  }
-
-  function renderAutomotiveWorkspace() {
-    const allTerms = state.words.filter(
-      (word) => word.deck === "汽车专业",
-    );
-    const categories = [
-      "全部",
-      ...new Set(
-        allTerms
-          .map((word) => word.automotiveCategory)
-          .filter(Boolean),
-      ),
-    ];
-    const query = state.automotiveQuery.trim().toLowerCase();
-    const terms = allTerms.filter((word) => {
-      if (
-        state.automotiveCategory !== "全部" &&
-        word.automotiveCategory !== state.automotiveCategory
-      ) {
-        return false;
-      }
-      return `${word.word} ${word.meaning} ${
-        word.automotiveCategory || ""
-      } ${(word.tags || []).join(" ")}`
-        .toLowerCase()
-        .includes(query);
-    });
-    const pageSize = 60;
-    const totalPages = Math.max(1, Math.ceil(terms.length / pageSize));
-    const page = Math.min(state.automotivePage, totalPages - 1);
-    const visible = terms.slice(page * pageSize, page * pageSize + pageSize);
-    const mastered = allTerms.filter((word) => word.mastery >= 80).length;
-    const learning = allTerms.filter(
-      (word) => word.mastery > 0 && word.mastery < 80,
-    ).length;
-    const automotivePassages = READING_PASSAGES.filter(
-      (passage) => passage.category === "汽车",
-    );
-
-    return `
-      <div class="page">
-        ${renderPageHeader(
-          "Automotive English",
-          "汽车专业英语",
-          "覆盖整车架构、动力系统、新能源三电、底盘、电气、诊断维修、制造和商务术语。",
-          `<button class="btn primary" data-action="start-automotive-training">${icon(
-            "target",
-          )}开始汽车词训练</button>
-           <button class="btn soft" data-action="open-speech-settings">${icon(
-             "volume",
-           )}朗读设置</button>`,
-        )}
-
-        <div class="notes-stats automotive-stats">
-          ${[
-            ["专业词条", allTerms.length],
-            ["术语分类", categories.length - 1],
-            ["学习中", learning],
-            ["已掌握", mastered],
-          ]
-            .map(
-              ([label, value]) =>
-                `<div class="stat-tile"><span>${label}</span><strong>${value}</strong></div>`,
-            )
-            .join("")}
-        </div>
-
-        <div class="notes-toolbar automotive-toolbar">
-          <label class="search-field">
-            ${icon("search")}
-            <input id="automotive-search" value="${escapeHTML(
-              state.automotiveQuery,
-            )}" placeholder="搜索汽车英文术语或中文释义" />
-          </label>
-        </div>
-        <div class="resource-filters">
-          ${categories
-            .map(
-              (category) => `
-                <button class="course-chip ${
-                  state.automotiveCategory === category ? "active" : ""
-                }" data-action="filter-automotive" data-filter="${escapeHTML(
-                  category,
-                )}">${escapeHTML(category)}</button>`,
-            )
-            .join("")}
-        </div>
-
-        <div class="automotive-layout">
-          <section class="panel automotive-glossary">
-            <div class="section-head">
-              <div><h2>汽车术语表</h2><p>${terms.length} 个匹配词条</p></div>
-            </div>
-            <div class="automotive-term-grid">
-              ${visible
-                .map(
-                  (word) => `
-                    <button class="automotive-term-card" data-action="open-automotive-term" data-id="${
-                      word.id
-                    }">
-                      <div>
-                        <span class="note-category">${escapeHTML(
-                          word.automotiveCategory || "汽车专业",
-                        )}</span>
-                        <strong>${escapeHTML(word.word)}</strong>
-                        <p>${escapeHTML(word.meaning)}</p>
-                      </div>
-                      <span class="mastery-pill ${
-                        word.mastery >= 80 ? "high" : word.mastery ? "medium" : "low"
-                      }">${word.mastery ? `${word.mastery}%` : "新词"}</span>
-                    </button>`,
-                )
-                .join("")}
-            </div>
-            ${
-              totalPages > 1
-                ? `<div class="vocabulary-pagination">
-                    <button class="btn small" data-action="automotive-page-prev" ${
-                      page === 0 ? "disabled" : ""
-                    }>${icon("chevronLeft")}上一页</button>
-                    <span>第 ${page + 1} / ${totalPages} 页</span>
-                    <button class="btn small" data-action="automotive-page-next" ${
-                      page >= totalPages - 1 ? "disabled" : ""
-                    }>下一页${icon("chevronRight")}</button>
-                  </div>`
-                : ""
-            }
-          </section>
-
-          <aside class="automotive-side">
-            <section class="panel">
-              <div class="panel-body">
-                <div class="section-head"><div><h2>汽车英语朗读</h2><p>专业场景短文与跟读</p></div></div>
-                <div class="automotive-passage-list">
-                  ${automotivePassages
-                    .map(
-                      (passage) => `
-                        <article class="automotive-passage-card">
-                          <span class="note-category">${escapeHTML(
-                            passage.level,
-                          )}</span>
-                          <strong>${escapeHTML(passage.title)}</strong>
-                          <p>${escapeHTML(passage.english[0])}</p>
-                          <div class="study-actions">
-                            <button class="btn small" data-action="speak-passage" data-id="${
-                              passage.id
-                            }">${icon("volume")}朗读</button>
-                            <button class="btn small soft" data-action="shadow-passage" data-id="${
-                              passage.id
-                            }">${icon("mic")}跟读</button>
-                          </div>
-                        </article>`,
-                    )
-                    .join("")}
-                </div>
-              </div>
-            </section>
-            <section class="panel panel-body">
-              <h2 style="font-size:17px">建议学习顺序</h2>
-              <ol class="automotive-path">
-                <li>先按分类认识部件和系统名称</li>
-                <li>听音并跟读专业术语和缩写</li>
-                <li>阅读维修、制造和新能源场景短文</li>
-                <li>把术语加入笔记并安排间隔复习</li>
-              </ol>
-            </section>
-          </aside>
-        </div>
-      </div>
-    `;
-  }
-
   function renderStudyPage(route) {
     const page = route.split("/")[1];
     if (page === "words") {
       return renderVocabularyWorkspace();
-    }
-    if (page === "training") {
-      return renderStudyTraining();
     }
 
     if (page === "listening") {
@@ -4635,7 +3418,49 @@
     }
 
     if (page === "translation") {
-      return renderTranslationWorkspace();
+      return `
+        <div class="page narrow">
+          ${renderPageHeader(
+            "Translation",
+            "翻译练习",
+            "不追求逐字对应，先表达清楚，再优化语气。",
+            `<button class="btn soft" data-action="add-demo-note" data-kind="translation">${icon(
+              "plus",
+            )}加入笔记</button>`,
+          )}
+          <section class="split-workspace">
+            <div class="panel workspace-panel">
+              <div class="eyebrow">Translate into English</div>
+              <h2>我想提高我的英语。</h2>
+              <textarea class="textarea" id="translation-input" rows="8" placeholder="在这里输入你的翻译…">I want to improve my English.</textarea>
+              <div class="study-actions" style="margin-top:12px">
+                <button class="btn primary" data-action="check-translation">${icon(
+                  "sparkles",
+                )}AI 检查</button>
+                <button class="btn" data-action="clear-translation">清空</button>
+              </div>
+            </div>
+            <div class="panel workspace-panel">
+              <h2>参考表达</h2>
+              <p>你的句子语法正确，表达也很清楚。</p>
+              <div style="padding:18px;border-radius:8px;background:var(--surface-blue);margin-bottom:16px">
+                <div class="field-label">更自然的口语</div>
+                <p class="english-text" style="margin:0;font-family:var(--font-reading);font-size:18px">I’d like to improve my English.</p>
+              </div>
+              <div class="analysis-result-section">
+                <span>Natural alternative</span>
+                <strong>I’m working on improving my English.</strong>
+                <p>强调你正在持续投入，而不只是表达愿望。</p>
+              </div>
+              <div class="analysis-result-section">
+                <span>Useful phrase</span>
+                <strong>work on + doing</strong>
+                <p>持续改善或训练某项能力。</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
     }
 
     return `
@@ -4964,13 +3789,6 @@
               "book-open",
             ],
             [
-              "reading/collections",
-              "文章与文献库",
-              "610 篇原创英语文章与学习文献导读",
-              "22 个主题分类",
-              "layers",
-            ],
-            [
               "reading/literature",
               "英文文献",
               "四级、雅思、托福和学术论文",
@@ -5159,335 +3977,6 @@
               <strong>阅读建议</strong>
               <p>先阅读 Abstract 和 Conclusion，再回到 Method 核对研究过程。</p>
             </div>
-          </aside>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderDataLoading(title, description) {
-    return `
-      <div class="page narrow">
-        ${renderPageHeader("Loading Library", title, description)}
-        <div class="panel panel-body">
-          <div class="analysis-loading">
-            <span class="spinner"></span>
-            <span>正在加载内容，请稍候……</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function ensureArticleLibrary() {
-    if (articleLibrary.length) return Promise.resolve(articleLibrary);
-    if (articleLibraryLoading) return articleLibrary._promise;
-    articleLibraryLoading = true;
-    articleLibraryError = "";
-    const promise =
-      window.ENGLISH_BUDDY_ARTICLE_LIBRARY_READY ||
-      Promise.reject(new Error("Article library loader is unavailable."));
-    articleLibrary._promise = promise
-      .then((entries) => {
-        articleLibrary = Array.isArray(entries) ? entries : [];
-        articleLibraryLoading = false;
-        if (getRoute().startsWith("reading/collection")) renderApp();
-        return articleLibrary;
-      })
-      .catch((error) => {
-        articleLibraryLoading = false;
-        articleLibraryError =
-          error?.message || "文章库暂时无法加载，请稍后重试。";
-        if (getRoute().startsWith("reading/collection")) renderApp();
-        throw error;
-      });
-    return articleLibrary._promise;
-  }
-
-  function renderArticleLibrary() {
-    if (!articleLibrary.length) {
-      if (!articleLibraryLoading) ensureArticleLibrary();
-      if (articleLibraryError) {
-        return `
-          <div class="page narrow">
-            <div class="empty-state">
-              <div><span class="empty-icon">${icon(
-                "refresh",
-              )}</span><h3>文章库加载失败</h3><p>${escapeHTML(
-                articleLibraryError,
-              )}</p><button class="btn primary" data-action="retry-article-library">${icon(
-                "refresh",
-              )}重试</button></div>
-            </div>
-          </div>
-        `;
-      }
-      return renderDataLoading(
-        "文章与文献库",
-        "正在准备 610 篇原创英语内容和学习文献导读。",
-      );
-    }
-
-    const categories = [
-      "全部",
-      ...new Set(articleLibrary.map((item) => item.category)),
-    ].sort((a, b) => a.localeCompare(b, "zh-CN"));
-    const query = state.collectionQuery.trim().toLowerCase();
-    const filtered = articleLibrary.filter((item) => {
-      if (
-        state.collectionType !== "all" &&
-        item.type !== state.collectionType
-      )
-        return false;
-      if (
-        state.collectionCategory !== "全部" &&
-        item.category !== state.collectionCategory
-      )
-        return false;
-      return `${item.title} ${item.abstract} ${item.summary} ${item.keywords.join(
-        " ",
-      )} ${item.category} ${item.exam.join(" ")}`
-        .toLowerCase()
-        .includes(query);
-    });
-    const pageSize = 60;
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-    const page = Math.min(state.collectionPage, totalPages - 1);
-    const visible = filtered.slice(page * pageSize, page * pageSize + pageSize);
-    const articleCount = articleLibrary.filter(
-      (item) => item.type === "article",
-    ).length;
-    const literatureCount = articleLibrary.length - articleCount;
-
-    return `
-      <div class="page">
-        ${renderPageHeader(
-          "Reading Collection",
-          "文章与文献库",
-          "610 篇原创英语学习文章与学习文献导读，覆盖 22 个主题和不同英语难度。",
-          `<button class="btn" data-action="random-collection">${icon(
-            "refresh",
-          )}随机阅读</button>
-           <button class="btn soft" data-action="open-speech-settings">${icon(
-             "volume",
-           )}朗读设置</button>`,
-        )}
-        <div class="notes-stats collection-stats">
-          ${[
-            ["内容总量", articleLibrary.length],
-            ["学习文章", articleCount],
-            ["文献导读", literatureCount],
-            ["主题分类", categories.length - 1],
-          ]
-            .map(
-              ([label, value]) =>
-                `<div class="stat-tile"><span>${label}</span><strong>${value}</strong></div>`,
-            )
-            .join("")}
-        </div>
-        <div class="notes-toolbar collection-toolbar">
-          <label class="search-field">
-            ${icon("search")}
-            <input id="collection-search" value="${escapeHTML(
-              state.collectionQuery,
-            )}" placeholder="搜索标题、主题、关键词、考试或内容摘要" />
-          </label>
-          <button class="btn ${
-            state.collectionType === "all" ? "soft" : ""
-          }" data-action="filter-collection-type" data-type="all">全部</button>
-          <button class="btn ${
-            state.collectionType === "article" ? "soft" : ""
-          }" data-action="filter-collection-type" data-type="article">文章</button>
-          <button class="btn ${
-            state.collectionType === "literature" ? "soft" : ""
-          }" data-action="filter-collection-type" data-type="literature">文献导读</button>
-        </div>
-        <div class="resource-filters">
-          ${categories
-            .map(
-              (category) => `
-                <button class="course-chip ${
-                  state.collectionCategory === category ? "active" : ""
-                }" data-action="filter-collection-category" data-category="${escapeHTML(
-                  category,
-                )}">${escapeHTML(category)}</button>`,
-            )
-            .join("")}
-        </div>
-        ${
-          visible.length
-            ? `<div class="collection-grid">
-                ${visible
-                  .map(
-                    (item) => `
-                      <article class="collection-card">
-                        <div class="collection-card-top">
-                          <span class="note-category">${
-                            item.type === "literature"
-                              ? "文献导读"
-                              : "学习文章"
-                          }</span>
-                          <span>${escapeHTML(item.level)} · ${
-                            item.readingMinutes
-                          } 分钟</span>
-                        </div>
-                        <h3>${escapeHTML(item.title)}</h3>
-                        <p>${escapeHTML(item.summary)}</p>
-                        <div class="note-tags">${item.keywords
-                          .slice(0, 3)
-                          .map(
-                            (keyword) =>
-                              `<span class="tag">${escapeHTML(
-                                keyword,
-                              )}</span>`,
-                          )
-                          .join("")}</div>
-                        <div class="collection-card-footer">
-                          <span>${escapeHTML(item.category)}</span>
-                          <div>
-                            <button class="icon-button ${
-                              state.collectionFavorites.includes(item.id)
-                                ? "is-saved"
-                                : ""
-                            }" data-action="toggle-collection-save" data-id="${
-                              item.id
-                            }">${icon("bookmark")}</button>
-                            <button class="btn small primary" data-action="open-collection" data-id="${
-                              item.id
-                            }">阅读</button>
-                          </div>
-                        </div>
-                      </article>`,
-                  )
-                  .join("")}
-              </div>
-              ${
-                totalPages > 1
-                  ? `<div class="vocabulary-pagination collection-pagination">
-                      <button class="btn small" data-action="collection-page-prev" ${
-                        page === 0 ? "disabled" : ""
-                      }>${icon("chevronLeft")}上一页</button>
-                      <span>第 ${page + 1} / ${totalPages} 页</span>
-                      <button class="btn small" data-action="collection-page-next" ${
-                        page >= totalPages - 1 ? "disabled" : ""
-                      }>下一页${icon("chevronRight")}</button>
-                    </div>`
-                  : ""
-              }`
-            : `<div class="empty-state"><div><span class="empty-icon">${icon(
-                "search",
-              )}</span><h3>没有找到匹配内容</h3><p>尝试更换关键词、主题或内容类型。</p></div></div>`
-        }
-      </div>
-    `;
-  }
-
-  function renderArticleDetail(articleId) {
-    if (!articleLibrary.length) {
-      if (!articleLibraryLoading) ensureArticleLibrary();
-      return renderDataLoading(
-        "Article Reader",
-        "正在加载文章内容。",
-      );
-    }
-    const article = articleLibrary.find((item) => item.id === articleId);
-    if (!article) {
-      return `
-        <div class="page narrow">
-          <div class="empty-state"><div><span class="empty-icon">${icon(
-            "file",
-          )}</span><h3>没有找到这篇内容</h3><p>返回文章文献库选择其他内容。</p><button class="btn primary" data-route="reading/collections" data-action="go-route">返回文章库</button></div></div>
-        </div>
-      `;
-    }
-    const saved = state.collectionFavorites.includes(article.id);
-    const progress = state.collectionProgress[article.id] || 0;
-    return `
-      <div class="page">
-        ${renderPageHeader(
-          article.type === "literature" ? "Study Literature" : "English Article",
-          article.title,
-          `${article.sourceType} · ${article.level} · ${article.readingMinutes} 分钟 · ${article.category}`,
-          `<button class="btn" data-route="reading/collections" data-action="go-route">${icon(
-            "arrowLeft",
-          )}返回文章库</button>
-           <button class="btn ${saved ? "soft" : ""}" data-action="toggle-collection-save" data-id="${
-             article.id
-           }">${icon("bookmark")}${saved ? "已收藏" : "收藏"}</button>
-           <button class="btn primary" data-action="add-collection-note" data-id="${
-             article.id
-           }">${icon("plus")}加入笔记</button>`,
-        )}
-        <div class="article-reader-layout">
-          <article class="panel article-reader">
-            <div class="article-reader-meta">
-              <span>${escapeHTML(article.author)}</span>
-              <span>${escapeHTML(article.journal)}</span>
-              <span>${article.year}</span>
-            </div>
-            <div class="paper-abstract">
-              <span class="field-label">英文摘要</span>
-              <p>${escapeHTML(article.abstract)}</p>
-            </div>
-            <div class="passage-actions">
-              <button class="btn primary" data-action="speak-text" data-text="${escapeHTML(
-                article.content.join(" "),
-              )}">${icon("play")}朗读全文</button>
-              <button class="btn soft" data-action="shadow-text" data-text="${escapeHTML(
-                article.content.join(" "),
-              )}">${icon("mic")}跟读全文</button>
-              <button class="btn" data-action="complete-collection" data-id="${
-                article.id
-              }">${icon("check")}标记完成</button>
-            </div>
-            <div class="article-paragraphs">
-              ${article.content
-                .map(
-                  (paragraph, index) => `
-                    <section class="article-paragraph">
-                      <div class="article-paragraph-head">
-                        <span>Paragraph ${index + 1}</span>
-                        <button class="icon-button" data-action="speak-text" data-text="${escapeHTML(
-                          paragraph,
-                        )}">${icon("volume")}</button>
-                      </div>
-                      <p class="english-text">${escapeHTML(paragraph)}</p>
-                      <p class="article-translation">${escapeHTML(
-                        article.translation[index] || "",
-                      )}</p>
-                    </section>`,
-                )
-                .join("")}
-            </div>
-          </article>
-          <aside class="article-reader-side">
-            <section class="panel panel-body">
-              <h3>阅读信息</h3>
-              <div class="progress-row">
-                <span>阅读进度<strong>${progress}%</strong></span>
-                <div class="large-progress"><span style="width:${progress}%"></span></div>
-              </div>
-              <div class="note-tags" style="margin-top:14px">${article.exam
-                .map((exam) => `<span class="tag">${escapeHTML(exam)}</span>`)
-                .join("")}</div>
-            </section>
-            <section class="panel panel-body">
-              <h3>关键词</h3>
-              <div class="note-tags">${article.keywords
-                .map(
-                  (keyword) =>
-                    `<button class="tag tag-button" data-action="paper-keyword" data-word="${escapeHTML(
-                      keyword,
-                    )}">${escapeHTML(keyword)}</button>`,
-                )
-                .join("")}</div>
-            </section>
-            <section class="panel panel-body">
-              <h3>内容说明</h3>
-              <p class="side-empty">${escapeHTML(
-                article.summary,
-              )}</p>
-            </section>
           </aside>
         </div>
       </div>
@@ -6022,10 +4511,6 @@
           <section class="content-card">
             <span class="task-icon">${icon("refresh")}</span><h3>功能自检</h3>
             <p>检查路由、资源、保存功能和核心数据</p><button class="btn small primary" data-action="run-diagnostics">开始检查</button>
-          </section>
-          <section class="content-card">
-            <span class="task-icon">${icon("layers")}</span><h3>版本管理</h3>
-            <p>当前版和旧版独立保存，不会直接覆盖</p><a class="btn small" href="${APP_BASE}/versions/" target="_blank" rel="noopener">查看版本</a>
           </section>
         </div>
       </div>
@@ -6801,147 +5286,6 @@
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  function renderNoteTemplatesModal() {
-    const templates = [
-      {
-        id: "word",
-        title: "单词笔记",
-        description: "单词、音标、释义、词形和例句",
-        icon: "type",
-      },
-      {
-        id: "grammar",
-        title: "语法笔记",
-        description: "结构、规则、例句和易错点",
-        icon: "heading",
-      },
-      {
-        id: "reading",
-        title: "阅读笔记",
-        description: "文章摘要、长难句、观点和生词",
-        icon: "book-open",
-      },
-      {
-        id: "mistake",
-        title: "错题笔记",
-        description: "错因、正确答案和同类题提醒",
-        icon: "target",
-      },
-      {
-        id: "essay",
-        title: "作文笔记",
-        description: "立场、论据、句型和修改记录",
-        icon: "edit",
-      },
-      {
-        id: "class",
-        title: "课堂笔记",
-        description: "课程重点、疑问和课后任务",
-        icon: "notebook",
-      },
-    ];
-    openModal(
-      `
-        <div class="modal-header">
-          <div><h2>插入笔记模板</h2><p>选择结构后会插入到当前光标位置，不覆盖已有内容。</p></div>
-          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
-        </div>
-        <div class="modal-body">
-          <div class="note-template-grid">
-            ${templates
-              .map(
-                (template) => `
-                  <button class="note-template-card" data-action="insert-note-template" data-template="${
-                    template.id
-                  }">
-                    <span class="task-icon">${icon(template.icon)}</span>
-                    <strong>${template.title}</strong>
-                    <small>${template.description}</small>
-                  </button>`,
-              )
-              .join("")}
-          </div>
-        </div>
-      `,
-      "wide",
-    );
-  }
-
-  function insertNoteTemplate(template) {
-    const templates = {
-      word:
-        '<h2>单词</h2><p><strong>word</strong> /phonetic/</p><h3>释义</h3><p>中文释义</p><h3>词形变化</h3><p>过去式 / 过去分词 / 复数</p><h3>例句</h3><p class="english-text">Write an example sentence.</p><h3>我的记忆方法</h3><p></p>',
-      grammar:
-        "<h2>语法结构</h2><p><strong>Structure:</strong></p><h3>使用规则</h3><ul><li>规则一</li><li>规则二</li></ul><h3>例句</h3><p></p><h3>易错点</h3><p></p>",
-      reading:
-        "<h2>文章信息</h2><p>标题 / 来源 / 阅读时间</p><h3>核心观点</h3><p></p><h3>文章结构</h3><ol><li>Introduction</li><li>Main idea</li><li>Conclusion</li></ol><h3>生词与长难句</h3><p></p><h3>我的总结</h3><p></p>",
-      mistake:
-        "<h2>错题记录</h2><p>题目来源：</p><h3>我的错误答案</h3><p></p><h3>正确答案</h3><p></p><h3>错误原因</h3><p></p><h3>知识点</h3><p></p><h3>下次提醒</h3><p></p>",
-      essay:
-        "<h2>作文主题</h2><p></p><h3>中心立场</h3><p></p><h3>论证结构</h3><ol><li>观点一</li><li>观点二</li><li>让步与总结</li></ol><h3>高级句型</h3><p></p><h3>修改记录</h3><p></p>",
-      class:
-        "<h2>课堂主题</h2><p>日期 / 课程 / 老师</p><h3>重点内容</h3><ul><li></li></ul><h3>新词和短语</h3><p></p><h3>我的疑问</h3><p></p><h3>课后任务</h3><p></p>",
-    };
-    closeModal();
-    const editor = document.getElementById("editor-content");
-    if (!editor) return;
-    editor.focus();
-    document.execCommand("insertHTML", false, templates[template] || "");
-    updateEditorNote();
-  }
-
-  function renderNoteSummaryModal() {
-    const note = getRouteNote(getRoute().split("/")[1]);
-    if (!note) return;
-    const text = stripHTML(note.body);
-    const headings = [...note.body.matchAll(/<h[1-3][^>]*>(.*?)<\/h[1-3]>/gi)]
-      .map((match) => stripHTML(match[1]))
-      .filter(Boolean)
-      .slice(0, 6);
-    const sentences = text
-      .split(/[。！？.!?]+/)
-      .map((sentence) => sentence.trim())
-      .filter((sentence) => sentence.length > 5);
-    const summary =
-      sentences.slice(0, 3).join("。") ||
-      "这篇笔记还没有足够的正文内容，可以先补充重点和例句。";
-    openModal(
-      `
-        <div class="modal-header">
-          <div><h2>AI 笔记总结</h2><p>${escapeHTML(note.title)}</p></div>
-          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
-        </div>
-        <div class="modal-body">
-          <div class="note-summary-card">
-            <span class="field-label">内容总结</span>
-            <p>${escapeHTML(summary)}</p>
-          </div>
-          <div class="note-summary-card">
-            <span class="field-label">结构大纲</span>
-            ${
-              headings.length
-                ? `<ul>${headings
-                    .map((heading) => `<li>${escapeHTML(heading)}</li>`)
-                    .join("")}</ul>`
-                : "<p>建议添加标题、单词、例句和总结等结构。</p>"
-            }
-          </div>
-          <div class="note-summary-card">
-            <span class="field-label">复习建议</span>
-            <p>把释义、例句和易错点分别设置复习时间，比一次性重复整篇笔记更有效。</p>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn" data-action="close-modal">关闭</button>
-          <button class="btn primary" data-action="insert-note-summary" data-summary="${escapeHTML(
-            summary,
-          )}">${icon("plus")}插入总结</button>
-        </div>
-      `,
-      "small",
-    );
-  }
-
   function renderWordImportModal() {
     openModal(
       `
@@ -7093,509 +5437,6 @@
     );
   }
 
-  function startTrainingMode(mode) {
-    ensureDailyTraining();
-    if (mode === "daily-words") {
-      const dailyWords = [...state.words]
-        .filter((word) => word.mastery === 0)
-        .sort(
-          (a, b) =>
-            (a.frequencyRank || 10_000_000) -
-            (b.frequencyRank || 10_000_000),
-        )
-        .slice(0, 50);
-      state.dailyWordIds = dailyWords.map((word) => word.id);
-      state.dailyCompletedIds = [];
-      state.activeWordDeck = "全部词库";
-      state.wordStatusFilter = "new";
-      state.wordPage = 0;
-      if (dailyWords[0]) state.activeWordId = dailyWords[0].id;
-      saveState();
-      openModal(
-        `
-          <div class="modal-header">
-            <div><h2>今日 50 词</h2><p>按词频和考试价值排序</p></div>
-            <button class="icon-button" data-action="close-modal">${icon("x")}</button>
-          </div>
-          <div class="modal-body">
-            <div class="daily-preview-list">
-              ${dailyWords
-                .slice(0, 12)
-                .map(
-                  (word, index) => `
-                    <div class="daily-preview-item">
-                      <span>${index + 1}</span>
-                      <div><strong>${escapeHTML(
-                        word.word,
-                      )}</strong><small>${escapeHTML(
-                        word.meaning,
-                      )}</small></div>
-                    </div>`,
-                )
-                .join("")}
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn" data-action="close-modal">稍后</button>
-            <button class="btn primary" data-action="begin-daily-words">${icon(
-              "play",
-            )}开始今日任务</button>
-          </div>
-        `,
-        "wide",
-      );
-      return;
-    }
-    if (mode === "spelling") {
-      const ids = [...state.words]
-        .filter((word) => word.mastery < 80)
-        .sort(
-          (a, b) =>
-            (a.frequencyRank || 10_000_000) -
-              (b.frequencyRank || 10_000_000) ||
-            a.mastery - b.mastery,
-        )
-        .slice(0, 20)
-        .map((word) => word.id);
-      state.vocabTest = {
-        active: true,
-        index: 0,
-        score: 0,
-        mode: "spelling",
-        wordIds: ids,
-        spellingCorrect: null,
-      };
-      renderSpellingTestModal();
-      return;
-    }
-
-    let items = [];
-    if (mode === "word-cards" || mode === "spaced-review") {
-      const due =
-        mode === "spaced-review"
-          ? state.words.filter(
-              (word) =>
-                word.reviewAt &&
-                new Date(word.reviewAt).getTime() <= Date.now(),
-            )
-          : [];
-      items = (due.length
-        ? due
-        : [...state.words].sort(
-            (a, b) =>
-              a.mastery - b.mastery ||
-              (a.frequencyRank || 10_000_000) -
-                (b.frequencyRank || 10_000_000),
-          )
-      )
-        .slice(0, mode === "word-cards" ? 12 : 10)
-        .map((word) => word.id);
-    } else if (mode === "listening-choice") {
-      items = [...state.words]
-        .sort(
-          (a, b) =>
-            (a.frequencyRank || 10_000_000) -
-            (b.frequencyRank || 10_000_000),
-        )
-        .slice(0, 10)
-        .map((word) => word.id);
-    } else if (mode === "cloze") {
-      items = CLOZE_EXAMPLES.map((item) => item.answer);
-    } else if (mode === "shadowing") {
-      items = SHADOWING_SENTENCES;
-    }
-
-    state.training.session = {
-      mode,
-      index: 0,
-      score: 0,
-      items,
-      revealed: false,
-      feedback: "",
-    };
-    renderTrainingSessionModal();
-  }
-
-  function trainingWord(item) {
-    if (typeof item !== "string") return null;
-    return state.words.find(
-      (word) => word.id === item || word.word === item,
-    );
-  }
-
-  function startListeningQuestion(word) {
-    if (!word) return;
-    speakText(word.word || word, null, null);
-  }
-
-  function completeTrainingTask(mode) {
-    if (!state.training.completedTaskIds.includes(mode)) {
-      state.training.completedTaskIds.push(mode);
-    }
-    saveState();
-  }
-
-  function renderTrainingSessionModal() {
-    const session = state.training.session;
-    if (session.index >= session.items.length) {
-      completeTrainingTask(session.mode);
-      const total = session.items.length;
-      openModal(
-        `
-          <div class="modal-header">
-            <div><h2>训练完成</h2><p>${trainingModeTitle(
-              session.mode,
-            )}</p></div>
-            <button class="icon-button" data-action="close-modal">${icon("x")}</button>
-          </div>
-          <div class="modal-body">
-            <div class="empty-state" style="min-height:280px">
-              <div>
-                <span class="empty-icon">${icon("award")}</span>
-                <h3>${session.score} / ${total}</h3>
-                <p>训练结果已经写入单词掌握度和间隔复习计划。</p>
-                <button class="btn primary" data-action="training-return">${icon(
-                  "check",
-                )}返回训练中心</button>
-              </div>
-            </div>
-          </div>
-        `,
-        "small",
-      );
-      return;
-    }
-
-    const current = session.items[session.index];
-    const word = trainingWord(current);
-    let content = "";
-
-    if (session.mode === "word-cards") {
-      content = `
-        <div class="flashcard ${session.revealed ? "flipped" : ""}">
-          <div class="flashcard-inner">
-            <div class="flashcard-face">
-              <span class="flashcard-label">English Word</span>
-              <h3>${escapeHTML(word.word)}</h3>
-              <span class="phonetic">${escapeHTML(
-                word.phoneticUS || word.phonetic,
-              )}</span>
-              <button class="btn small" data-action="training-speak">${icon(
-                "volume",
-              )}朗读</button>
-            </div>
-            <div class="flashcard-face back">
-              <span class="flashcard-label">Meaning</span>
-              <h3>${escapeHTML(word.meaning)}</h3>
-              <p>${escapeHTML(
-                word.example ||
-                  word.definition ||
-                  `Review ${word.word} in context.`,
-              )}</p>
-            </div>
-          </div>
-        </div>
-        <div class="flashcard-controls">
-          <button class="btn danger" data-action="training-known" data-known="false">${icon(
-            "refresh",
-          )}需复习</button>
-          <button class="btn soft" data-action="training-flip">${icon(
-            "eye",
-          )}${session.revealed ? "收起答案" : "查看答案"}</button>
-          <button class="btn primary" data-action="training-known" data-known="true">${icon(
-            "check",
-          )}我认识</button>
-        </div>
-      `;
-    } else if (session.mode === "listening-choice") {
-      const meanings = state.words
-        .filter(
-          (item) =>
-            item.id !== word.id &&
-            item.meaning !== word.meaning,
-        )
-        .slice(session.index + 3, session.index + 6)
-        .map((item) => item.meaning);
-      const options = [word.meaning, ...meanings].sort(() =>
-        Math.random() - 0.5,
-      );
-      content = `
-        <div class="listening-training">
-          <button class="mic-button" data-action="training-speak">${icon(
-            "volume",
-          )}</button>
-          <h3>听音选择正确释义</h3>
-          <div class="answer-list compact-options">
-            ${options
-              .map(
-                (option) => `
-                  <button class="answer-option" data-action="training-answer" data-answer="${escapeHTML(
-                    option,
-                  )}"><span>${escapeHTML(option)}</span></button>`,
-              )
-              .join("")}
-          </div>
-        </div>
-      `;
-      window.setTimeout(() => speakText(word.word), 120);
-    } else if (session.mode === "cloze") {
-      const example = CLOZE_EXAMPLES.find(
-        (item) => item.answer === current,
-      );
-      const options = [
-        example.answer,
-        ...CLOZE_EXAMPLES.filter(
-          (item) => item.answer !== example.answer,
-        )
-          .slice(session.index + 2, session.index + 5)
-          .map((item) => item.answer),
-      ].sort(() => Math.random() - 0.5);
-      content = `
-        <div class="cloze-stage">
-          <div class="eyebrow">Fill in the blank</div>
-          <h3>${escapeHTML(example.sentence)}</h3>
-          <div class="answer-list compact-options">
-            ${options
-              .map(
-                (option) => `
-                  <button class="answer-option" data-action="training-answer" data-answer="${escapeHTML(
-                    option,
-                  )}"><span>${escapeHTML(option)}</span></button>`,
-              )
-              .join("")}
-          </div>
-        </div>
-      `;
-    } else if (session.mode === "shadowing") {
-      content = `
-        <div class="shadowing-stage">
-          <span class="task-icon">${icon("mic")}</span>
-          <h3>${escapeHTML(current)}</h3>
-          <div class="speaking-controls">
-            <button class="btn" data-action="training-speak">${icon(
-              "volume",
-            )}标准朗读</button>
-            <button class="btn soft" data-action="toggle-shadowing">${icon(
-              "mic",
-            )}开始跟读</button>
-          </div>
-          <p>先完整听一遍，再模仿重音、停顿和语调。</p>
-          <div class="editor-actions">
-            <button class="btn danger" data-action="training-rating" data-rating="again">${icon(
-              "refresh",
-            )}再听一次</button>
-            <button class="btn primary" data-action="training-rating" data-rating="good">${icon(
-              "check",
-            )}跟读完成</button>
-          </div>
-        </div>
-      `;
-    } else if (session.mode === "spaced-review") {
-      content = `
-        <div class="flashcard ${session.revealed ? "flipped" : ""}">
-          <div class="flashcard-inner">
-            <div class="flashcard-face">
-              <span class="flashcard-label">间隔复习</span>
-              <h3>${escapeHTML(word.word)}</h3>
-              <p>${escapeHTML(word.phoneticUS || word.phonetic)}</p>
-              <button class="btn small" data-action="training-speak">${icon(
-                "volume",
-              )}朗读</button>
-            </div>
-            <div class="flashcard-face back">
-              <span class="flashcard-label">释义</span>
-              <h3>${escapeHTML(word.meaning)}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="flashcard-controls">
-          <button class="btn danger" data-action="training-rating" data-rating="again">${icon(
-            "refresh",
-          )}重来</button>
-          <button class="btn" data-action="training-flip">${icon(
-            "eye",
-          )}${session.revealed ? "收起答案" : "查看答案"}</button>
-          <button class="btn soft" data-action="training-rating" data-rating="hard">${icon(
-            "clock",
-          )}困难</button>
-          <button class="btn primary" data-action="training-rating" data-rating="good">${icon(
-            "check",
-          )}掌握</button>
-        </div>
-      `;
-    }
-
-    openModal(
-      `
-        <div class="modal-header">
-          <div><h2>${trainingModeTitle(
-            session.mode,
-          )}</h2><p>第 ${session.index + 1} / ${
-            session.items.length
-          } 项 · 已答对 ${session.score}</p></div>
-          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
-        </div>
-        <div class="modal-body">
-          ${content}
-          ${
-            session.feedback
-              ? `<div class="training-feedback ${
-                  session.feedback === "correct" ? "correct" : "incorrect"
-                }">${icon(
-                  session.feedback === "correct" ? "check" : "refresh",
-                )}${
-                  session.feedback === "correct"
-                    ? "回答正确"
-                    : `答案：${escapeHTML(
-                        word?.word || current,
-                      )}`
-                }</div>
-                <button class="btn primary" style="width:100%;margin-top:12px" data-action="training-next">下一项${icon(
-                  "chevronRight",
-                )}</button>`
-              : ""
-          }
-        </div>
-      `,
-      "wide",
-    );
-  }
-
-  function trainingModeTitle(mode) {
-    return {
-      "word-cards": "单词卡片",
-      "listening-choice": "听音选义",
-      spelling: "拼写训练",
-      cloze: "例句填空",
-      shadowing: "发音跟读",
-      "spaced-review": "间隔复习",
-    }[mode] || "单词训练";
-  }
-
-  function advanceTraining() {
-    state.training.session.index += 1;
-    state.training.session.revealed = false;
-    state.training.session.feedback = "";
-    renderTrainingSessionModal();
-  }
-
-  function applyWordTrainingResult(word, correct, rating = "good") {
-    if (!word) return;
-    if (correct) {
-      word.mastery = Math.min(100, word.mastery + 8);
-      const intervals = { easy: 7, good: 3, hard: 1, again: 0 };
-      const days = intervals[rating] ?? 3;
-      word.reviewAt =
-        days > 0
-          ? new Date(Date.now() + days * 86400000).toISOString()
-          : new Date(Date.now() + 10 * 60000).toISOString();
-    } else {
-      word.mastery = Math.max(0, word.mastery - 10);
-      word.reviewAt = new Date(Date.now() + 10 * 60000).toISOString();
-    }
-    if (
-      state.dailyWordIds.includes(word.id) &&
-      !state.dailyCompletedIds.includes(word.id)
-    ) {
-      state.dailyCompletedIds.push(word.id);
-    }
-    saveState();
-  }
-
-  function shadowingSimilarity(target, transcript) {
-    const normalize = (value) =>
-      String(value || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9'\s]/g, " ")
-        .split(/\s+/)
-        .filter(Boolean);
-    const expected = normalize(target);
-    const actual = normalize(transcript);
-    if (!expected.length || !actual.length) return 0;
-    const used = new Set();
-    let matches = 0;
-    expected.forEach((word) => {
-      const index = actual.findIndex(
-        (candidate, candidateIndex) =>
-          !used.has(candidateIndex) && candidate === word,
-      );
-      if (index >= 0) {
-        used.add(index);
-        matches += 1;
-      }
-    });
-    const coverage = matches / expected.length;
-    const lengthPenalty =
-      Math.min(actual.length, expected.length) /
-      Math.max(actual.length, expected.length);
-    return Math.round((coverage * 0.8 + lengthPenalty * 0.2) * 100);
-  }
-
-  function startShadowingAttempt(targetText, button) {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    const stage = button.closest(".shadowing-stage, .passage-sentence");
-    const existing = stage?.querySelector(".shadowing-feedback");
-    existing?.remove();
-
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang =
-        state.speech.accent === "en" ? "en-US" : state.speech.accent;
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      button.classList.add("is-speaking");
-      let completed = false;
-
-      recognition.onresult = (event) => {
-        completed = true;
-        const transcript = event.results?.[0]?.[0]?.transcript || "";
-        const score = shadowingSimilarity(targetText, transcript);
-        button.classList.remove("is-speaking");
-        const feedback = document.createElement("div");
-        feedback.className = "shadowing-feedback";
-        feedback.innerHTML = `<strong>跟读完成度 ${score}%</strong><span>识别结果：${escapeHTML(
-          transcript,
-        )}</span>`;
-        stage?.appendChild(feedback);
-        state.training.session.score += score >= 70 ? 1 : 0;
-        showToast(
-          score >= 70
-            ? "跟读识别正确，可以继续下一句。"
-            : "已记录发音，再听一遍并模仿停顿和重音。",
-          score >= 70 ? "success" : "info",
-        );
-      };
-      recognition.onerror = () => {
-        button.classList.remove("is-speaking");
-        if (!completed) {
-          showToast("浏览器语音识别不可用，可以使用标准朗读后自评。");
-        }
-      };
-      recognition.onend = () => button.classList.remove("is-speaking");
-      try {
-        recognition.start();
-        showToast("正在听……请朗读当前句子。");
-      } catch {
-        button.classList.remove("is-speaking");
-        showToast("录音暂时无法启动，请检查麦克风权限。");
-      }
-      return;
-    }
-
-    button.classList.toggle("is-speaking");
-    if (button.classList.contains("is-speaking")) {
-      showToast("正在听……请跟随朗读。");
-      window.setTimeout(() => {
-        if (document.body.contains(button)) {
-          button.classList.remove("is-speaking");
-          showToast("跟读完成，请进行自评。", "success");
-        }
-      }, 1800);
-    }
-  }
-
   function renderSpellingTestModal() {
     const words = state.vocabTest.wordIds
       .map((id) => state.words.find((word) => word.id === id))
@@ -7606,7 +5447,6 @@
     }
     if (state.vocabTest.index >= words.length) {
       state.vocabTest.active = false;
-      completeTrainingTask("spelling");
       const score = state.vocabTest.score;
       openModal(
         `
@@ -7997,7 +5837,7 @@
         },
         {
           label: "单词数据",
-          ok: Array.isArray(state.words) && state.words.length >= 28000,
+          ok: Array.isArray(state.words) && state.words.length >= 8000,
           detail: `${state.words.length} 个单词`,
         },
         {
@@ -8206,175 +6046,6 @@
     renderReviewModal();
   }
 
-  function normalizeTranslationKey(value) {
-    return String(value || "")
-      .toLowerCase()
-      .replace(/[’‘]/g, "'")
-      .replace(/[。！？!?.,，、；;：:]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  function localTranslation(value, direction) {
-    const key = normalizeTranslationKey(value);
-    if (!key) return "";
-    if (TRANSLATION_DICTIONARY[key]) return TRANSLATION_DICTIONARY[key];
-    const reverseKey = normalizeTranslationKey(
-      Object.values(TRANSLATION_DICTIONARY).find(
-        (translation) =>
-          normalizeTranslationKey(translation) === key,
-      ) || "",
-    );
-    if (reverseKey && TRANSLATION_DICTIONARY[reverseKey]) {
-      return TRANSLATION_DICTIONARY[reverseKey];
-    }
-    if (direction === "zh-en") {
-      return Object.entries(TRANSLATION_DICTIONARY).find(([, english]) =>
-        key.includes(normalizeTranslationKey(english)),
-      )?.[0] || "";
-    }
-    return Object.entries(TRANSLATION_DICTIONARY).find(([chinese]) =>
-      key.includes(normalizeTranslationKey(chinese)),
-    )?.[1] || "";
-  }
-
-  function decodeTranslationEntities(value) {
-    const parser = new DOMParser();
-    return parser.parseFromString(
-      `<textarea>${String(value || "")}</textarea>`,
-      "text/html",
-    ).querySelector("textarea").value;
-  }
-
-  async function performTranslation(value, direction) {
-    const text = String(value || "").trim();
-    if (!text) {
-      throw new Error("请输入需要翻译的内容。");
-    }
-    const local = localTranslation(text, direction);
-    if (local) return local;
-
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 9000);
-    try {
-      const pair = direction === "zh-en" ? "zh-CN|en-US" : "en-US|zh-CN";
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
-          text,
-        )}&langpair=${encodeURIComponent(pair)}`,
-        { signal: controller.signal },
-      );
-      if (!response.ok) throw new Error(`翻译服务返回 ${response.status}`);
-      const payload = await response.json();
-      const translated = payload?.responseData?.translatedText;
-      if (!translated) throw new Error("没有获得翻译结果");
-      return decodeTranslationEntities(translated);
-    } catch (error) {
-      throw new Error(
-        error?.name === "AbortError"
-          ? "翻译服务响应超时，请稍后重试。"
-          : "暂时无法连接在线翻译，请检查网络后重试。",
-      );
-    } finally {
-      window.clearTimeout(timer);
-    }
-  }
-
-  function getReadingPassage(id) {
-    return (
-      READING_PASSAGES.find((passage) => passage.id === id) ||
-      READING_PASSAGES[0]
-    );
-  }
-
-  async function copyTextToClipboard(value) {
-    const text = String(value || "");
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      textarea.remove();
-    }
-    showToast("译文已复制。", "success");
-  }
-
-  function downloadTextFile(filename, content, type = "text/plain") {
-    const blob = new Blob([content], { type: `${type};charset=utf-8` });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function noteToMarkdown(note) {
-    const body = String(note.body || "")
-      .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "# $1\n\n")
-      .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "## $1\n\n")
-      .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "### $1\n\n")
-      .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "- $1\n")
-      .replace(/<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi, "**$2**")
-      .replace(/<(em|i)[^>]*>([\s\S]*?)<\/\1>/gi, "*$2*")
-      .replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, "> $1\n\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/p>/gi, "\n\n")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-    return `# ${note.title}\n\n分类：${categoryName(
-      note.category,
-    )}\n\n标签：${(note.tags || []).join("、") || "无"}\n\n${body}\n`;
-  }
-
-  function renderAutomotiveTermModal(wordId) {
-    const word = state.words.find((item) => item.id === wordId);
-    if (!word) return;
-    openModal(
-      `
-        <div class="modal-header">
-          <div><h2>${escapeHTML(word.word)}</h2><p>${escapeHTML(
-            word.automotiveCategory || "汽车专业",
-          )}</p></div>
-          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
-        </div>
-        <div class="modal-body">
-          <div class="automotive-term-detail">
-            <span class="field-label">中文术语</span>
-            <h3>${escapeHTML(word.meaning)}</h3>
-            <p>${escapeHTML(word.definition || "汽车专业英语术语")}</p>
-          </div>
-          <div class="editor-actions" style="margin-top:18px">
-            <button class="btn small" data-action="speak-text" data-text="${escapeHTML(
-              word.word,
-            )}">${icon("volume")}朗读术语</button>
-            <button class="btn small soft" data-action="add-word-note" data-id="${
-              word.id
-            }">${icon("notebook")}加入笔记</button>
-            <button class="btn small" data-action="mark-word-known" data-id="${
-              word.id
-            }">${icon("check")}已掌握</button>
-            <button class="btn small" data-action="mark-word-review" data-id="${
-              word.id
-            }">${icon("refresh")}安排复习</button>
-          </div>
-        </div>
-      `,
-      "small",
-    );
-  }
-
   function handleAction(element, event) {
     const action = element.dataset.action;
     const id = element.dataset.id;
@@ -8419,69 +6090,6 @@
       newNote();
       return;
     }
-    if (action === "random-note-review") {
-      const notes = state.notes.filter((note) => !note.archived);
-      if (!notes.length) {
-        showToast("还没有可以回忆的笔记。");
-        return;
-      }
-      const note = notes[Math.floor(Math.random() * notes.length)];
-      navigate(`notes/${note.id}`);
-      showToast(`今日回忆：${note.title}`);
-      return;
-    }
-    if (action === "export-all-notes") {
-      downloadTextFile(
-        `english-buddy-notes-${todayKey()}.json`,
-        JSON.stringify(
-          {
-            exportedAt: new Date().toISOString(),
-            categories: state.categories,
-            notes: state.notes,
-          },
-          null,
-          2,
-        ),
-        "application/json",
-      );
-      showToast("全部笔记已导出。", "success");
-      return;
-    }
-    if (action === "duplicate-note") {
-      const source = getRouteNote(id);
-      if (!source) return;
-      const copy = createNote({
-        ...source,
-        id: uid("note"),
-        title: `${source.title}（副本）`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      navigate(`notes/${copy.id}`);
-      showToast("笔记已复制。", "success");
-      return;
-    }
-    if (action === "export-note-markdown") {
-      const note = getRouteNote(id);
-      if (!note) return;
-      downloadTextFile(
-        `${note.title.replace(/[\\/:*?"<>|]/g, "-")}.md`,
-        noteToMarkdown(note),
-        "text/markdown",
-      );
-      showToast("Markdown 已导出。", "success");
-      return;
-    }
-    if (action === "scroll-note-heading") {
-      const headings = document.querySelectorAll(
-        "#editor-content h1, #editor-content h2, #editor-content h3",
-      );
-      headings[Number(element.dataset.index || 0)]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-      return;
-    }
     if (action === "open-note") {
       navigate(`notes/${id}`);
       return;
@@ -8522,49 +6130,6 @@
       state.wordStatusFilter = element.dataset.status;
       state.wordPage = 0;
       renderApp();
-      return;
-    }
-    if (action === "filter-automotive") {
-      state.automotiveCategory = element.dataset.filter;
-      state.automotivePage = 0;
-      renderApp();
-      return;
-    }
-    if (
-      action === "automotive-page-prev" ||
-      action === "automotive-page-next"
-    ) {
-      state.automotivePage = Math.max(
-        0,
-        state.automotivePage + (action === "automotive-page-next" ? 1 : -1),
-      );
-      renderApp();
-      return;
-    }
-    if (action === "open-automotive-term") {
-      renderAutomotiveTermModal(id);
-      return;
-    }
-    if (action === "start-automotive-training") {
-      const words = state.words
-        .filter((word) => word.deck === "汽车专业")
-        .sort(
-          (a, b) =>
-            a.mastery - b.mastery ||
-            String(a.automotiveCategory || "").localeCompare(
-              String(b.automotiveCategory || ""),
-            ),
-        )
-        .slice(0, 20);
-      state.training.session = {
-        mode: "word-cards",
-        index: 0,
-        score: 0,
-        items: words.map((word) => word.id),
-        revealed: false,
-        feedback: "",
-      };
-      renderTrainingSessionModal();
       return;
     }
     if (action === "word-page-prev" || action === "word-page-next") {
@@ -8643,91 +6208,6 @@
     }
     if (action === "open-word-import") {
       renderWordImportModal();
-      return;
-    }
-    if (action === "start-training-mode") {
-      startTrainingMode(element.dataset.mode);
-      return;
-    }
-    if (action === "training-speak") {
-      const session = state.training.session;
-      const item = session.items[session.index];
-      const word = trainingWord(item);
-      const text =
-        session.mode === "shadowing"
-          ? item
-          : word?.word || item;
-      speakText(text, null, element);
-      return;
-    }
-    if (action === "training-flip") {
-      state.training.session.revealed =
-        !state.training.session.revealed;
-      renderTrainingSessionModal();
-      return;
-    }
-    if (action === "training-answer") {
-      const session = state.training.session;
-      const item = session.items[session.index];
-      const word = trainingWord(item);
-      const answer = element.dataset.answer || "";
-      let correct = false;
-      if (session.mode === "listening-choice")
-        correct = answer === word?.meaning;
-      else if (session.mode === "cloze")
-        correct = answer === item;
-      if (correct) session.score += 1;
-      session.feedback = correct ? "correct" : "incorrect";
-      applyWordTrainingResult(word, correct);
-      renderTrainingSessionModal();
-      return;
-    }
-    if (action === "training-known") {
-      const session = state.training.session;
-      const word = trainingWord(session.items[session.index]);
-      const known = element.dataset.known === "true";
-      session.revealed = true;
-      if (known) session.score += 1;
-      session.feedback = known ? "correct" : "incorrect";
-      applyWordTrainingResult(word, known);
-      renderTrainingSessionModal();
-      return;
-    }
-    if (action === "training-rating") {
-      const session = state.training.session;
-      if (session.mode === "shadowing") {
-        const rating = element.dataset.rating;
-        if (rating === "good") session.score += 1;
-        session.feedback =
-          rating === "good" ? "correct" : "incorrect";
-        if (rating === "good") {
-          completeTrainingTask("shadowing");
-        }
-        renderTrainingSessionModal();
-        return;
-      }
-      const word = trainingWord(session.items[session.index]);
-      const rating = element.dataset.rating || "good";
-      const correct = rating !== "again";
-      if (correct) session.score += 1;
-      session.feedback = correct ? "correct" : "incorrect";
-      session.revealed = true;
-      applyWordTrainingResult(word, correct, rating);
-      renderTrainingSessionModal();
-      return;
-    }
-    if (action === "training-next") {
-      advanceTraining();
-      return;
-    }
-    if (action === "toggle-shadowing") {
-      const session = state.training.session;
-      startShadowingAttempt(session.items[session.index], element);
-      return;
-    }
-    if (action === "training-return") {
-      closeModal();
-      navigate("study/training");
       return;
     }
     if (action === "start-daily-words") {
@@ -9052,34 +6532,6 @@
       updateEditorNote();
       return;
     }
-    if (action === "open-note-templates") {
-      renderNoteTemplatesModal();
-      return;
-    }
-    if (action === "insert-note-template") {
-      insertNoteTemplate(element.dataset.template);
-      return;
-    }
-    if (action === "ai-note-summary") {
-      renderNoteSummaryModal();
-      return;
-    }
-    if (action === "insert-note-summary") {
-      closeModal();
-      const editor = document.getElementById("editor-content");
-      if (editor) {
-        editor.focus();
-        document.execCommand(
-          "insertHTML",
-          false,
-          `<h3>AI 总结</h3><p>${escapeHTML(
-            element.dataset.summary || "",
-          )}</p>`,
-        );
-        updateEditorNote();
-      }
-      return;
-    }
     if (action === "insert-english-block") {
       const selectedText = window.getSelection()?.toString().trim() || "";
       document.getElementById("editor-content")?.focus();
@@ -9302,34 +6754,6 @@
       navigate("study/words");
       return;
     }
-    if (action === "shadow-daily-text") {
-      startShadowingAttempt(element.dataset.text || "", element);
-      return;
-    }
-    if (action === "save-daily-content") {
-      const item = DAILY_ENGLISH_CONTENT.find(
-        (entry) =>
-          normalizeTranslationKey(entry.english) ===
-          normalizeTranslationKey(
-            element.closest(".daily-english-card")?.querySelector("h2")
-              ?.textContent || "",
-          ),
-      );
-      if (!item) return;
-      createNote({
-        title: `每日英语：${item.type}`,
-        summary: item.chinese,
-        body: `<p class="english-text">${escapeHTML(
-          item.english,
-        )}</p><p>${escapeHTML(item.chinese)}</p><h3>重点</h3><p>${escapeHTML(
-          item.note,
-        )}</p>`,
-        category: "speaking",
-        tags: ["每日英语", item.type],
-      });
-      showToast("今日英语已加入笔记。", "success");
-      return;
-    }
     if (
       ["next-word", "previous-word", "next-step", "previous-step"].includes(
         action,
@@ -9364,170 +6788,15 @@
       speakText(text, 0.9);
       return;
     }
-    if (action === "set-translation-direction") {
-      state.translation.direction = element.dataset.direction;
-      state.translation.output = "";
-      state.translation.status = "idle";
-      state.translation.error = "";
-      saveState();
-      renderApp();
-      return;
-    }
-    if (action === "swap-translation-direction") {
-      state.translation.direction =
-        state.translation.direction === "zh-en" ? "en-zh" : "zh-en";
-      state.translation.input =
-        state.translation.output || state.translation.input;
-      state.translation.output = "";
-      state.translation.status = "idle";
-      state.translation.error = "";
-      saveState();
-      renderApp();
-      return;
-    }
-    if (action === "translate-submit") {
+    if (action === "check-translation") {
+      showToast("AI 正在检查翻译……");
       const input = document.getElementById("translation-input");
-      if (input) state.translation.input = input.value;
-      const text = state.translation.input.trim();
-      if (!text) {
-        showToast("请先输入需要翻译的内容。");
-        return;
-      }
-      state.translation.status = "loading";
-      state.translation.error = "";
-      renderApp();
-      performTranslation(text, state.translation.direction)
-        .then((translated) => {
-          state.translation.output = translated;
-          state.translation.status = "success";
-          state.translation.history = [
-            {
-              input: text,
-              output: translated,
-              direction: state.translation.direction,
-              createdAt: new Date().toISOString(),
-            },
-            ...state.translation.history.filter(
-              (item) =>
-                item.input !== text ||
-                item.direction !== state.translation.direction,
-            ),
-          ].slice(0, 12);
-          saveState();
-          renderApp();
-        })
-        .catch((error) => {
-          state.translation.status = "error";
-          state.translation.error =
-            error?.message || "暂时无法完成翻译，请稍后重试。";
-          saveState();
-          renderApp();
-        });
-      return;
-    }
-    if (action === "speak-translation-input") {
-      speakText(
-        state.translation.input,
-        null,
-        element,
-        state.translation.direction === "en-zh" ? "en" : "zh",
-      );
-      return;
-    }
-    if (action === "speak-translation-output") {
-      speakText(
-        state.translation.output,
-        null,
-        element,
-        state.translation.direction === "zh-en" ? "en" : "zh",
-      );
-      return;
-    }
-    if (action === "copy-translation") {
-      copyTextToClipboard(state.translation.output);
-      return;
-    }
-    if (action === "save-translation-note") {
-      const note = createNote({
-        title: `翻译笔记：${state.translation.input.slice(0, 28)}`,
-        summary: state.translation.output.slice(0, 100),
-        body: `<h3>原文</h3><p>${escapeHTML(
-          state.translation.input,
-        )}</p><h3>译文</h3><p class="english-text">${escapeHTML(
-          state.translation.output,
-        )}</p>`,
-        category: "writing",
-        tags: ["翻译", "中英互译"],
-      });
-      showToast("翻译已加入英语笔记。", "success");
-      if (getRoute() === "notes") renderApp();
-      return note;
-    }
-    if (action === "load-translation-history") {
-      const item =
-        state.translation.history[Number(element.dataset.index || 0)];
-      if (item) {
-        state.translation.direction = item.direction;
-        state.translation.input = item.input;
-        state.translation.output = item.output;
-        state.translation.status = "success";
-        state.translation.error = "";
-        renderApp();
-      }
-      return;
-    }
-    if (action === "filter-passages") {
-      state.translation.passageFilter = element.dataset.filter;
-      const first = READING_PASSAGES.find(
-        (passage) =>
-          state.translation.passageFilter === "全部" ||
-          passage.category === state.translation.passageFilter,
-      );
-      if (first) state.translation.activePassageId = first.id;
-      saveState();
-      renderApp();
-      return;
-    }
-    if (action === "select-reading-passage") {
-      state.translation.activePassageId = element.dataset.id;
-      saveState();
-      renderApp();
-      return;
-    }
-    if (action === "speak-passage") {
-      const passage = getReadingPassage(element.dataset.id);
-      speakText(passage.english.join(" "), null, element, "en");
-      return;
-    }
-    if (action === "shadow-passage") {
-      const passage = getReadingPassage(element.dataset.id);
-      startShadowingAttempt(passage.english.join(" "), element);
-      return;
-    }
-    if (action === "shadow-text") {
-      startShadowingAttempt(element.dataset.text || "", element);
-      return;
-    }
-    if (action === "add-passage-note") {
-      const passage = getReadingPassage(element.dataset.id);
-      createNote({
-        title: `朗读笔记：${passage.title}`,
-        summary: `${passage.category} · ${passage.level} · ${passage.minutes} 分钟`,
-        body: `<h2>${escapeHTML(
-          passage.title,
-        )}</h2>${passage.english
-          .map(
-            (sentence, index) =>
-              `<p class="english-text">${escapeHTML(
-                sentence,
-              )}</p><p>${escapeHTML(passage.chinese[index] || "")}</p>`,
-          )
-          .join("")}`,
-        category: "reading",
-        tags: ["朗读", passage.category, "英语素材"],
-        important: true,
-      });
-      showToast("朗读语料已加入笔记。", "success");
+      window.setTimeout(() => {
+        if (input) {
+          input.value = "I’d like to improve my English.";
+          showToast("翻译已优化。", "success");
+        }
+      }, 900);
       return;
     }
     if (action === "clear-translation") {
@@ -9683,107 +6952,6 @@
       renderApp();
       return;
     }
-    if (action === "retry-article-library") {
-      articleLibraryError = "";
-      articleLibrary = [];
-      articleLibraryLoading = false;
-      ensureArticleLibrary();
-      renderApp();
-      return;
-    }
-    if (action === "filter-collection-type") {
-      state.collectionType = element.dataset.type;
-      state.collectionPage = 0;
-      renderApp();
-      return;
-    }
-    if (action === "filter-collection-category") {
-      state.collectionCategory = element.dataset.category;
-      state.collectionPage = 0;
-      renderApp();
-      return;
-    }
-    if (
-      action === "collection-page-prev" ||
-      action === "collection-page-next"
-    ) {
-      state.collectionPage = Math.max(
-        0,
-        state.collectionPage + (action === "collection-page-next" ? 1 : -1),
-      );
-      renderApp();
-      document
-        .querySelector(".collection-toolbar")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    if (action === "open-collection") {
-      state.activeCollectionId = id;
-      navigate(`reading/collection/${id}`);
-      return;
-    }
-    if (action === "random-collection") {
-      if (!articleLibrary.length) {
-        ensureArticleLibrary();
-        return;
-      }
-      const item =
-        articleLibrary[Math.floor(Math.random() * articleLibrary.length)];
-      navigate(`reading/collection/${item.id}`);
-      return;
-    }
-    if (action === "toggle-collection-save") {
-      if (state.collectionFavorites.includes(id)) {
-        state.collectionFavorites = state.collectionFavorites.filter(
-          (item) => item !== id,
-        );
-      } else {
-        state.collectionFavorites.push(id);
-      }
-      saveState();
-      renderApp();
-      showToast(
-        state.collectionFavorites.includes(id)
-          ? "内容已收藏。"
-          : "已取消收藏。",
-        "success",
-      );
-      return;
-    }
-    if (action === "complete-collection") {
-      state.collectionProgress[id] = 100;
-      saveState();
-      renderApp();
-      showToast("已标记完成阅读。", "success");
-      return;
-    }
-    if (action === "add-collection-note") {
-      const article =
-        articleLibrary.find((item) => item.id === id) ||
-        articleLibrary.find(
-          (item) => item.id === state.activeCollectionId,
-        );
-      if (!article) return;
-      createNote({
-        title: `阅读笔记：${article.title}`,
-        summary: article.summary,
-        body: `<h2>${escapeHTML(
-          article.title,
-        )}</h2><p>${escapeHTML(article.sourceType)} · ${escapeHTML(
-          article.category,
-        )} · ${article.level}</p><h3>英文摘要</h3><p class="english-text">${escapeHTML(
-          article.abstract,
-        )}</p><h3>内容摘要</h3><p>${escapeHTML(
-          article.summary,
-        )}</p><h3>关键词</h3><p>${article.keywords
-          .map((keyword) => escapeHTML(keyword))
-          .join(" · ")}</p>`,
-        category: "reading",
-        tags: ["文章文献库", article.category, ...article.exam],
-      });
-      showToast("内容已加入英语笔记。", "success");
-      return;
-    }
     if (action === "toggle-book-save") {
       const book = state.books.find((item) => item.id === id);
       if (book) {
@@ -9900,7 +7068,8 @@
       return [];
     }
     speechVoices = window.speechSynthesis
-      .getVoices();
+      .getVoices()
+      .filter((voice) => /^en(?:-|$)/i.test(voice.lang || ""));
     return speechVoices;
   }
 
@@ -9944,8 +7113,6 @@
           ? ["samantha", "ava", "alex", "allison", "us english", "american"]
           : accent === "en-AU"
             ? ["karen", "matilda", "australian"]
-            : accent === "zh"
-              ? ["tingting", "meijia", "sinji", "chinese"]
             : [];
     preferredNames.forEach((preferred, index) => {
       if (name.includes(preferred)) score += 50 - index;
@@ -9958,14 +7125,10 @@
     const voices = refreshSpeechVoices();
     const filtered =
       accent === "en"
-        ? voices.filter((voice) => /^en(?:-|$)/i.test(voice.lang || ""))
-        : accent === "zh"
-          ? voices.filter((voice) => /^zh(?:-|$)/i.test(voice.lang || ""))
-          : voices.filter((voice) =>
-              (voice.lang || "")
-                .toLowerCase()
-                .startsWith(accent.toLowerCase()),
-            );
+        ? voices
+        : voices.filter((voice) =>
+            (voice.lang || "").toLowerCase().startsWith(accent.toLowerCase()),
+          );
     return [...filtered].sort(
       (a, b) =>
         voiceScore(b, accent) - voiceScore(a, accent) ||
@@ -9973,12 +7136,7 @@
     );
   }
 
-  function speakText(
-    text,
-    requestedRate = null,
-    button = null,
-    language = "en",
-  ) {
+  function speakText(text, requestedRate = null, button = null) {
     const value = String(text || "").trim();
     if (!value) return;
     if (
@@ -9995,20 +7153,10 @@
 
     return waitForSpeechVoices().then((voices) => {
       const selectedVoice =
-        (language === "zh"
-          ? voices.filter((voice) => /^zh(?:-|$)/i.test(voice.lang || ""))
-          : voices
-        ).find(
+        voices.find(
           (voice) => voice.voiceURI === state.speech.voiceURI,
-        ) ||
-        (language === "zh"
-          ? getVoicesForAccent("zh")[0]
-          : getVoicesForAccent(state.speech.accent)[0]) ||
-        voices.find((voice) =>
-          language === "zh"
-            ? /^zh(?:-|$)/i.test(voice.lang || "")
-            : /^en(?:-|$)/i.test(voice.lang || ""),
-        ) ||
+        ) || getVoicesForAccent(state.speech.accent)[0] ||
+        voices[0] ||
         null;
       const rate = Math.min(
         1.5,
@@ -10029,11 +7177,7 @@
         const createUtterance = (voice) => {
           const utterance = new SpeechSynthesisUtterance(value);
           utterance.lang =
-            language === "zh"
-              ? "zh-CN"
-              : state.speech.accent === "en"
-                ? "en-US"
-                : state.speech.accent;
+            state.speech.accent === "en" ? "en-US" : state.speech.accent;
           utterance.rate = rate;
           utterance.pitch = 1;
           utterance.volume = 1;
@@ -10714,38 +7858,6 @@
         }
       }, 220);
     }
-    if (target.id === "translation-input") {
-      state.translation.input = target.value;
-      scheduleSave();
-    }
-    if (target.id === "automotive-search") {
-      state.automotiveQuery = target.value;
-      state.automotivePage = 0;
-      window.clearTimeout(target._automotiveFilterTimer);
-      target._automotiveFilterTimer = window.setTimeout(() => {
-        const position = target.selectionStart || target.value.length;
-        renderApp();
-        const next = document.getElementById("automotive-search");
-        if (next) {
-          next.focus();
-          next.setSelectionRange(position, position);
-        }
-      }, 220);
-    }
-    if (target.id === "collection-search") {
-      state.collectionQuery = target.value;
-      state.collectionPage = 0;
-      window.clearTimeout(target._collectionFilterTimer);
-      target._collectionFilterTimer = window.setTimeout(() => {
-        const position = target.selectionStart || target.value.length;
-        renderApp();
-        const next = document.getElementById("collection-search");
-        if (next) {
-          next.focus();
-          next.setSelectionRange(position, position);
-        }
-      }, 220);
-    }
   });
 
   document.addEventListener("change", (event) => {
@@ -10829,28 +7941,5 @@
     showToast("操作暂时无法完成，请稍后重试。");
   });
 
-  async function bootstrap() {
-    const automotive = Array.isArray(
-      window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY,
-    )
-      ? window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY
-      : [];
-    let mainVocabulary = [];
-    try {
-      mainVocabulary = await window.ENGLISH_BUDDY_VOCABULARY_READY;
-    } catch (error) {
-      console.error("Vocabulary data failed to load:", error);
-      showToast(
-        "完整词库暂时无法加载，已进入基础词库模式。刷新页面可重试。",
-      );
-    }
-    BUILTIN_VOCABULARY = [...mainVocabulary, ...automotive];
-    BUILTIN_WORD_IDS = new Set(
-      BUILTIN_VOCABULARY.map((word) => word.id),
-    );
-    initializeState();
-    renderApp();
-  }
-
-  bootstrap();
+  renderApp();
 })();
