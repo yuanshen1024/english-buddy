@@ -13,6 +13,10 @@ converted to IPA. Oxford dictionary content is not bundled.
 10 categories, including powertrain, EV systems, chassis, electrical,
 diagnostics, manufacturing, business and driving safety.
 
+`article-library.json.gz` contains 610 original English-learning articles and
+study literature guides. These are self-authored learning materials, not
+fabricated citations or copies of published papers.
+
 Regenerate after obtaining the source CSV:
 
 ```bash
