@@ -6023,6 +6023,10 @@
             <span class="task-icon">${icon("refresh")}</span><h3>功能自检</h3>
             <p>检查路由、资源、保存功能和核心数据</p><button class="btn small primary" data-action="run-diagnostics">开始检查</button>
           </section>
+          <section class="content-card">
+            <span class="task-icon">${icon("layers")}</span><h3>版本管理</h3>
+            <p>当前版和旧版独立保存，不会直接覆盖</p><a class="btn small" href="${APP_BASE}/versions/" target="_blank" rel="noopener">查看版本</a>
+          </section>
         </div>
       </div>
     `;
