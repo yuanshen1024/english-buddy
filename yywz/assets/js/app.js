@@ -7,11 +7,16 @@
   const APP_BASE = (
     document.querySelector('meta[name="app-base"]')?.getAttribute("content") || ""
   ).replace(/\/+$/, "");
-  const BUILTIN_VOCABULARY =
-    typeof window !== "undefined" &&
+  const BUILTIN_VOCABULARY = [
+    ...(typeof window !== "undefined" &&
     Array.isArray(window.ENGLISH_BUDDY_VOCABULARY)
       ? window.ENGLISH_BUDDY_VOCABULARY
-      : [];
+      : []),
+    ...(typeof window !== "undefined" &&
+    Array.isArray(window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY)
+      ? window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY
+      : []),
+  ];
   const BUILTIN_WORD_IDS = new Set(
     BUILTIN_VOCABULARY.map((word) => word.id),
   );
@@ -28,6 +33,8 @@
       '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
     layers:
       '<path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+    car:
+      '<path d="M5 17h14l1-6-2-5H6l-2 5Z"/><path d="M4 17v3h2v-2h12v2h2v-3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
     notebook:
       '<path d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 2v20"/><path d="M12 7h5"/><path d="M12 11h5"/>',
     user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
@@ -374,6 +381,90 @@
         "不过，政策改变整个系统的速度远快于孤立的选择。",
         "当两个层面的行动互相支持时，效果最好。",
         "基于证据的政策可以把广泛担忧转化为可衡量的改变。",
+      ],
+    },
+    {
+      id: "passage-auto-service",
+      title: "Diagnosing an Engine Warning Light",
+      category: "汽车",
+      level: "B1",
+      minutes: 4,
+      english: [
+        "When the engine warning light appears, the vehicle may have stored a diagnostic trouble code.",
+        "A technician connects a scan tool to the diagnostic connector and reads the fault code.",
+        "The code identifies the affected system, but it does not always identify the failed component.",
+        "The technician then checks live sensor data, wiring and mechanical condition.",
+        "After the repair, the system is tested again to confirm that the fault has been cleared.",
+      ],
+      chinese: [
+        "当发动机故障灯亮起时，车辆可能已经存储了诊断故障码。",
+        "维修技师将诊断仪连接到诊断接口并读取故障码。",
+        "故障码可以指出受影响的系统，但不一定直接指出损坏的部件。",
+        "随后技师需要检查传感器实时数据、线路和机械状况。",
+        "维修完成后，需要再次测试系统，确认故障已经排除。",
+      ],
+    },
+    {
+      id: "passage-auto-ev",
+      title: "Electric Vehicle Charging",
+      category: "汽车",
+      level: "B2",
+      minutes: 4,
+      english: [
+        "Electric vehicles store energy in a high-voltage battery pack.",
+        "The battery management system monitors voltage, temperature and state of charge.",
+        "Fast charging reduces charging time but can increase thermal stress on the battery.",
+        "Vehicle-to-grid technology may allow electric cars to support the power grid.",
+        "Charging performance depends on the vehicle, charger and battery condition.",
+      ],
+      chinese: [
+        "电动汽车将能量储存在高压电池包中。",
+        "电池管理系统会监测电压、温度和荷电状态。",
+        "快速充电可以缩短充电时间，但可能增加电池的热压力。",
+        "车辆到电网技术可以让电动汽车为电网提供支持。",
+        "充电性能取决于车辆、充电设备和电池状态。",
+      ],
+    },
+    {
+      id: "passage-auto-adas",
+      title: "Driver Assistance Systems",
+      category: "汽车",
+      level: "B2",
+      minutes: 4,
+      english: [
+        "Advanced driver assistance systems use cameras, radar and other sensors to understand the road.",
+        "Adaptive cruise control can adjust speed to maintain a safe distance from the vehicle ahead.",
+        "Lane keeping assistance monitors lane markings and can provide steering support.",
+        "These systems assist the driver, but they do not replace driver responsibility.",
+        "Clear sensor data and reliable software are essential for safe operation.",
+      ],
+      chinese: [
+        "高级驾驶辅助系统使用摄像头、雷达和其他传感器理解道路环境。",
+        "自适应巡航控制可以调整车速，与前车保持安全距离。",
+        "车道保持辅助会监测车道线，并提供转向支持。",
+        "这些系统辅助驾驶员，但不能替代驾驶员责任。",
+        "清晰的传感器数据和可靠的软件对安全运行至关重要。",
+      ],
+    },
+    {
+      id: "passage-auto-manufacturing",
+      title: "Vehicle Manufacturing and Quality",
+      category: "汽车",
+      level: "C1",
+      minutes: 5,
+      english: [
+        "Vehicle manufacturing combines stamping, welding, painting and final assembly.",
+        "Automotive engineers use computer-aided design and simulation before a prototype is built.",
+        "Tolerance control is critical because small variations can affect fit, safety and performance.",
+        "Assembly-line workers and automated systems follow standardized work instructions.",
+        "Quality control continues through production, testing and after-sales feedback.",
+      ],
+      chinese: [
+        "汽车制造包括冲压、焊接、涂装和总装。",
+        "汽车工程师会在制造样车之前使用计算机辅助设计和仿真。",
+        "公差控制非常关键，因为微小偏差会影响装配、安全性和性能。",
+        "装配线员工和自动化系统按照标准化作业指导书操作。",
+        "质量控制贯穿生产、测试和售后反馈全过程。",
       ],
     },
   ];
@@ -2034,6 +2125,9 @@
     wordStatusFilter: "all",
     dailyWordIds: [],
     dailyCompletedIds: [],
+    automotiveQuery: "",
+    automotiveCategory: "全部",
+    automotivePage: 0,
     speech: {
       accent: "en-GB",
       rate: 0.92,
@@ -2280,6 +2374,7 @@
     study: ["学习", "学习中心"],
     "study/words": ["学习 / 单词", "单词学习"],
     "study/training": ["学习 / 训练中心", "单词训练中心"],
+    "study/automotive": ["学习 / 汽车专业英语", "汽车专业英语"],
     "study/listening": ["学习 / 听力", "听力训练"],
     "study/speaking": ["学习 / 朗读", "跟读朗读"],
     "study/translation": ["学习 / 翻译与英语朗读", "翻译与英语朗读"],
@@ -2355,6 +2450,7 @@
             [
               ["study/words", "单词"],
               ["study/training", "训练中心"],
+              ["study/automotive", "汽车英语"],
               ["study/listening", "听力"],
               ["study/speaking", "朗读"],
               ["study/translation", "翻译"],
@@ -2460,6 +2556,7 @@
           ${[
             ["study/words", "单词", "type"],
             ["study/training", "训练中心", "target"],
+            ["study/automotive", "汽车英语", "car"],
             ["study/listening", "听力", "headphones"],
             ["study/speaking", "朗读", "mic"],
             ["study/translation", "翻译", "languages"],
@@ -2630,6 +2727,7 @@
   function renderPage(route) {
     if (route === "home") return renderHomePage();
     if (route === "study") return renderStudyOverview();
+    if (route === "study/automotive") return renderAutomotiveWorkspace();
     if (route.startsWith("study/")) return renderStudyPage(route);
     if (route === "speaking") return renderSpeakingPage();
     if (route === "exams") return renderExamsOverview();
@@ -3432,6 +3530,13 @@
                 "target",
               ],
               [
+                "study/automotive",
+                "汽车专业英语",
+                "整车、发动机、新能源、维修与制造术语",
+                "230 个专业词条",
+                "car",
+              ],
+              [
                 "study/listening",
                 "听力",
                 "从校园、旅行到学术场景",
@@ -4148,6 +4253,177 @@
             </article>
           </div>
         </section>
+      </div>
+    `;
+  }
+
+  function renderAutomotiveWorkspace() {
+    const allTerms = state.words.filter(
+      (word) => word.deck === "汽车专业",
+    );
+    const categories = [
+      "全部",
+      ...new Set(
+        allTerms
+          .map((word) => word.automotiveCategory)
+          .filter(Boolean),
+      ),
+    ];
+    const query = state.automotiveQuery.trim().toLowerCase();
+    const terms = allTerms.filter((word) => {
+      if (
+        state.automotiveCategory !== "全部" &&
+        word.automotiveCategory !== state.automotiveCategory
+      ) {
+        return false;
+      }
+      return `${word.word} ${word.meaning} ${
+        word.automotiveCategory || ""
+      } ${(word.tags || []).join(" ")}`
+        .toLowerCase()
+        .includes(query);
+    });
+    const pageSize = 60;
+    const totalPages = Math.max(1, Math.ceil(terms.length / pageSize));
+    const page = Math.min(state.automotivePage, totalPages - 1);
+    const visible = terms.slice(page * pageSize, page * pageSize + pageSize);
+    const mastered = allTerms.filter((word) => word.mastery >= 80).length;
+    const learning = allTerms.filter(
+      (word) => word.mastery > 0 && word.mastery < 80,
+    ).length;
+    const automotivePassages = READING_PASSAGES.filter(
+      (passage) => passage.category === "汽车",
+    );
+
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          "Automotive English",
+          "汽车专业英语",
+          "覆盖整车架构、动力系统、新能源三电、底盘、电气、诊断维修、制造和商务术语。",
+          `<button class="btn primary" data-action="start-automotive-training">${icon(
+            "target",
+          )}开始汽车词训练</button>
+           <button class="btn soft" data-action="open-speech-settings">${icon(
+             "volume",
+           )}朗读设置</button>`,
+        )}
+
+        <div class="notes-stats automotive-stats">
+          ${[
+            ["专业词条", allTerms.length],
+            ["术语分类", categories.length - 1],
+            ["学习中", learning],
+            ["已掌握", mastered],
+          ]
+            .map(
+              ([label, value]) =>
+                `<div class="stat-tile"><span>${label}</span><strong>${value}</strong></div>`,
+            )
+            .join("")}
+        </div>
+
+        <div class="notes-toolbar automotive-toolbar">
+          <label class="search-field">
+            ${icon("search")}
+            <input id="automotive-search" value="${escapeHTML(
+              state.automotiveQuery,
+            )}" placeholder="搜索汽车英文术语或中文释义" />
+          </label>
+        </div>
+        <div class="resource-filters">
+          ${categories
+            .map(
+              (category) => `
+                <button class="course-chip ${
+                  state.automotiveCategory === category ? "active" : ""
+                }" data-action="filter-automotive" data-filter="${escapeHTML(
+                  category,
+                )}">${escapeHTML(category)}</button>`,
+            )
+            .join("")}
+        </div>
+
+        <div class="automotive-layout">
+          <section class="panel automotive-glossary">
+            <div class="section-head">
+              <div><h2>汽车术语表</h2><p>${terms.length} 个匹配词条</p></div>
+            </div>
+            <div class="automotive-term-grid">
+              ${visible
+                .map(
+                  (word) => `
+                    <button class="automotive-term-card" data-action="open-automotive-term" data-id="${
+                      word.id
+                    }">
+                      <div>
+                        <span class="note-category">${escapeHTML(
+                          word.automotiveCategory || "汽车专业",
+                        )}</span>
+                        <strong>${escapeHTML(word.word)}</strong>
+                        <p>${escapeHTML(word.meaning)}</p>
+                      </div>
+                      <span class="mastery-pill ${
+                        word.mastery >= 80 ? "high" : word.mastery ? "medium" : "low"
+                      }">${word.mastery ? `${word.mastery}%` : "新词"}</span>
+                    </button>`,
+                )
+                .join("")}
+            </div>
+            ${
+              totalPages > 1
+                ? `<div class="vocabulary-pagination">
+                    <button class="btn small" data-action="automotive-page-prev" ${
+                      page === 0 ? "disabled" : ""
+                    }>${icon("chevronLeft")}上一页</button>
+                    <span>第 ${page + 1} / ${totalPages} 页</span>
+                    <button class="btn small" data-action="automotive-page-next" ${
+                      page >= totalPages - 1 ? "disabled" : ""
+                    }>下一页${icon("chevronRight")}</button>
+                  </div>`
+                : ""
+            }
+          </section>
+
+          <aside class="automotive-side">
+            <section class="panel">
+              <div class="panel-body">
+                <div class="section-head"><div><h2>汽车英语朗读</h2><p>专业场景短文与跟读</p></div></div>
+                <div class="automotive-passage-list">
+                  ${automotivePassages
+                    .map(
+                      (passage) => `
+                        <article class="automotive-passage-card">
+                          <span class="note-category">${escapeHTML(
+                            passage.level,
+                          )}</span>
+                          <strong>${escapeHTML(passage.title)}</strong>
+                          <p>${escapeHTML(passage.english[0])}</p>
+                          <div class="study-actions">
+                            <button class="btn small" data-action="speak-passage" data-id="${
+                              passage.id
+                            }">${icon("volume")}朗读</button>
+                            <button class="btn small soft" data-action="shadow-passage" data-id="${
+                              passage.id
+                            }">${icon("mic")}跟读</button>
+                          </div>
+                        </article>`,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </section>
+            <section class="panel panel-body">
+              <h2 style="font-size:17px">建议学习顺序</h2>
+              <ol class="automotive-path">
+                <li>先按分类认识部件和系统名称</li>
+                <li>听音并跟读专业术语和缩写</li>
+                <li>阅读维修、制造和新能源场景短文</li>
+                <li>把术语加入笔记并安排间隔复习</li>
+              </ol>
+            </section>
+          </aside>
+        </div>
       </div>
     `;
   }
@@ -7585,6 +7861,43 @@
     showToast("译文已复制。", "success");
   }
 
+  function renderAutomotiveTermModal(wordId) {
+    const word = state.words.find((item) => item.id === wordId);
+    if (!word) return;
+    openModal(
+      `
+        <div class="modal-header">
+          <div><h2>${escapeHTML(word.word)}</h2><p>${escapeHTML(
+            word.automotiveCategory || "汽车专业",
+          )}</p></div>
+          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
+        </div>
+        <div class="modal-body">
+          <div class="automotive-term-detail">
+            <span class="field-label">中文术语</span>
+            <h3>${escapeHTML(word.meaning)}</h3>
+            <p>${escapeHTML(word.definition || "汽车专业英语术语")}</p>
+          </div>
+          <div class="editor-actions" style="margin-top:18px">
+            <button class="btn small" data-action="speak-text" data-text="${escapeHTML(
+              word.word,
+            )}">${icon("volume")}朗读术语</button>
+            <button class="btn small soft" data-action="add-word-note" data-id="${
+              word.id
+            }">${icon("notebook")}加入笔记</button>
+            <button class="btn small" data-action="mark-word-known" data-id="${
+              word.id
+            }">${icon("check")}已掌握</button>
+            <button class="btn small" data-action="mark-word-review" data-id="${
+              word.id
+            }">${icon("refresh")}安排复习</button>
+          </div>
+        </div>
+      `,
+      "small",
+    );
+  }
+
   function handleAction(element, event) {
     const action = element.dataset.action;
     const id = element.dataset.id;
@@ -7669,6 +7982,49 @@
       state.wordStatusFilter = element.dataset.status;
       state.wordPage = 0;
       renderApp();
+      return;
+    }
+    if (action === "filter-automotive") {
+      state.automotiveCategory = element.dataset.filter;
+      state.automotivePage = 0;
+      renderApp();
+      return;
+    }
+    if (
+      action === "automotive-page-prev" ||
+      action === "automotive-page-next"
+    ) {
+      state.automotivePage = Math.max(
+        0,
+        state.automotivePage + (action === "automotive-page-next" ? 1 : -1),
+      );
+      renderApp();
+      return;
+    }
+    if (action === "open-automotive-term") {
+      renderAutomotiveTermModal(id);
+      return;
+    }
+    if (action === "start-automotive-training") {
+      const words = state.words
+        .filter((word) => word.deck === "汽车专业")
+        .sort(
+          (a, b) =>
+            a.mastery - b.mastery ||
+            String(a.automotiveCategory || "").localeCompare(
+              String(b.automotiveCategory || ""),
+            ),
+        )
+        .slice(0, 20);
+      state.training.session = {
+        mode: "word-cards",
+        index: 0,
+        score: 0,
+        items: words.map((word) => word.id),
+        revealed: false,
+        feedback: "",
+      };
+      renderTrainingSessionModal();
       return;
     }
     if (action === "word-page-prev" || action === "word-page-next") {
@@ -9720,6 +10076,20 @@
     if (target.id === "translation-input") {
       state.translation.input = target.value;
       scheduleSave();
+    }
+    if (target.id === "automotive-search") {
+      state.automotiveQuery = target.value;
+      state.automotivePage = 0;
+      window.clearTimeout(target._automotiveFilterTimer);
+      target._automotiveFilterTimer = window.setTimeout(() => {
+        const position = target.selectionStart || target.value.length;
+        renderApp();
+        const next = document.getElementById("automotive-search");
+        if (next) {
+          next.focus();
+          next.setSelectionRange(position, position);
+        }
+      }, 220);
     }
   });
 
