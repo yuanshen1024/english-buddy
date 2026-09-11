@@ -1697,6 +1697,73 @@ h4 {
   color: var(--ink-muted);
 }
 
+.note-template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.note-template-card {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  text-align: left;
+}
+
+.note-template-card:hover {
+  border-color: #b9cbed;
+  background: var(--surface-blue);
+}
+
+.note-template-card .task-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 0 6px;
+}
+
+.note-template-card strong,
+.note-template-card small {
+  display: block;
+}
+
+.note-template-card strong {
+  font-size: 14px;
+}
+
+.note-template-card small {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.note-summary-card {
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.note-summary-card + .note-summary-card {
+  margin-top: 10px;
+}
+
+.note-summary-card p,
+.note-summary-card ul {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.note-summary-card ul {
+  padding-left: 19px;
+}
+
 .selection-toolbar {
   position: fixed;
   z-index: 70;
@@ -3023,6 +3090,230 @@ h4 {
   opacity: 0.45;
 }
 
+.training-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 220px;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  overflow: hidden;
+  background: #182b50;
+  color: white;
+}
+
+.training-dashboard h2 {
+  margin-bottom: 5px;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.training-dashboard p {
+  max-width: 620px;
+  margin: 0;
+  color: #c5d1e6;
+  font-size: 13px;
+}
+
+.training-dashboard .eyebrow {
+  color: #9fbaff;
+}
+
+.training-progress-ring {
+  display: grid;
+  place-items: center;
+}
+
+.training-progress-ring .progress-ring::before {
+  background: #20375f;
+}
+
+.training-dashboard-meta {
+  display: grid;
+  gap: 10px;
+  padding-left: 22px;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  color: #c5d1e6;
+  font-size: 12px;
+}
+
+.training-dashboard-meta span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.training-dashboard-meta .icon {
+  width: 16px;
+  height: 16px;
+  color: #9fbaff;
+}
+
+.training-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.training-card {
+  display: flex;
+  min-height: 230px;
+  flex-direction: column;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.training-card.completed {
+  background: linear-gradient(180deg, #f5fbf8, white 70%);
+}
+
+.training-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.training-card-top .task-icon {
+  margin: 0;
+}
+
+.training-card h3 {
+  margin-bottom: 6px;
+  font-size: 17px;
+}
+
+.training-card p {
+  margin-bottom: 18px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.training-card > .btn {
+  width: 100%;
+  margin-top: auto;
+}
+
+.training-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--success);
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.training-done .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.association-stage,
+.listening-training,
+.cloze-stage,
+.shadowing-stage {
+  text-align: center;
+}
+
+.association-image {
+  display: grid;
+  width: 190px;
+  height: 190px;
+  place-items: center;
+  margin: 0 auto 18px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--association-color) 18%, white);
+  color: var(--association-color);
+}
+
+.association-image .icon {
+  width: 84px;
+  height: 84px;
+  stroke-width: 1.35;
+}
+
+.association-stage > p,
+.shadowing-stage > p {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.compact-options {
+  max-width: 520px;
+  margin: 20px auto 0;
+  text-align: left;
+}
+
+.listening-training .mic-button {
+  width: 76px;
+  height: 76px;
+  margin-bottom: 18px;
+}
+
+.listening-training h3,
+.cloze-stage h3,
+.shadowing-stage h3 {
+  max-width: 650px;
+  margin: 0 auto 14px;
+  font-family: var(--font-reading);
+  font-size: 23px;
+  line-height: 1.55;
+}
+
+.shadowing-stage > .task-icon {
+  margin: 0 auto 16px;
+}
+
+.training-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 16px;
+  padding: 11px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.training-feedback.correct {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.training-feedback.incorrect {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.training-feedback .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.shadowing-feedback {
+  display: grid;
+  gap: 4px;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-blue);
+  text-align: left;
+}
+
+.shadowing-feedback strong {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.shadowing-feedback span {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
 .vocabulary-item {
   display: grid;
   width: 100%;
@@ -3844,6 +4135,22 @@ h4 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .training-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .training-dashboard {
+    grid-template-columns: minmax(0, 1fr) 140px;
+  }
+
+  .training-dashboard-meta {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 14px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-left: 0;
+  }
+
   .doc-tools {
     position: static;
     grid-column: 1 / -1;
@@ -4127,6 +4434,10 @@ h4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .note-template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .speech-preview {
     grid-template-columns: 38px minmax(0, 1fr);
   }
@@ -4149,6 +4460,19 @@ h4 {
   }
 
   .daily-preview-list {
+    grid-template-columns: 1fr;
+  }
+
+  .note-template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .training-grid,
+  .training-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .training-dashboard-meta {
     grid-template-columns: 1fr;
   }
 

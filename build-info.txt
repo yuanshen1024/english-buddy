@@ -1,2 +1,0 @@
-deployed_at=2026-09-11T17:15:00+08:00
-build=english-buddy-pages-refresh

@@ -28,6 +28,17 @@
       '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
     layers:
       '<path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+    planet:
+      '<circle cx="12" cy="12" r="6"/><path d="M3 15c4 3 14 3 18-6"/><path d="M6 5c5-1 11 1 14 6"/>',
+    leaf: '<path d="M20 4C10 4 4 9 4 16c0 2 1 4 3 4 7 0 13-6 13-16Z"/><path d="M4 20c3-6 8-10 14-13"/>',
+    city: '<path d="M3 21V8h7v13M10 21V3h7v18M17 21V10h4v11"/><path d="M6 11h1M6 15h1M13 6h1M13 10h1M13 14h1"/>',
+    health: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
+    travel: '<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/>',
+    coffee: '<path d="M4 8h14v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5Z"/><path d="M18 10h1a3 3 0 0 1 0 6h-1M7 3v2M11 3v2M15 3v2"/>',
+    laptop: '<rect x="4" y="4" width="16" height="12" rx="2"/><path d="M2 20h20M9 20h6"/>',
+    mountain: '<path d="m3 20 7-12 4 6 2-3 5 9Z"/><path d="m8 12 2-4 3 4"/>',
+    bulb: '<path d="M9 18h6M10 22h4"/><path d="M8.5 14.5A7 7 0 1 1 15.5 14.5c-1 .8-1.5 1.5-1.5 2.5h-4c0-1-.5-1.7-1.5-2.5Z"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     notebook:
       '<path d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 2v20"/><path d="M12 7h5"/><path d="M12 11h5"/>',
     user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
@@ -117,6 +128,41 @@
 
   const daysAgo = (days, hours = 0) =>
     new Date(baseNow - days * 86400000 - hours * 3600000).toISOString();
+
+  const VISUAL_ASSOCIATIONS = [
+    { word: "universe", meaning: "宇宙", icon: "planet", color: "#315f9b" },
+    { word: "sustainable", meaning: "可持续的", icon: "leaf", color: "#28775d" },
+    { word: "urbanization", meaning: "城市化", icon: "city", color: "#6b557f" },
+    { word: "health", meaning: "健康", icon: "health", color: "#a44852" },
+    { word: "travel", meaning: "旅行", icon: "travel", color: "#2f6db5" },
+    { word: "coffee", meaning: "咖啡", icon: "coffee", color: "#815a3a" },
+    { word: "technology", meaning: "科技", icon: "laptop", color: "#315e78" },
+    { word: "mountain", meaning: "山；山脉", icon: "mountain", color: "#4b7354" },
+    { word: "idea", meaning: "想法；主意", icon: "bulb", color: "#a27622" },
+    { word: "world", meaning: "世界", icon: "globe", color: "#376aa6" },
+  ];
+
+  const CLOZE_EXAMPLES = [
+    { answer: "universe", sentence: "The ______ is very large, and our knowledge of it is still expanding." },
+    { answer: "sustainable", sentence: "The city is investing in ______ public transport." },
+    { answer: "deadline", sentence: "We need to submit the report before the ______." },
+    { answer: "registration", sentence: "______ closes this Friday for new students." },
+    { answer: "available", sentence: "Are you ______ for a meeting tomorrow morning?" },
+    { answer: "opportunity", sentence: "The exchange program offers an ______ to use English." },
+    { answer: "maintain", sentence: "Regular review helps learners ______ their vocabulary." },
+    { answer: "significant", sentence: "There has been a ______ improvement in air quality." },
+    { answer: "inevitable", sentence: "Some degree of change is ______." },
+    { answer: "hypothesis", sentence: "The results support the original ______." },
+  ];
+
+  const SHADOWING_SENTENCES = [
+    "How do I get to the station?",
+    "I would like to improve my English.",
+    "The universe is very large and still expanding.",
+    "Public policy and individual action can reinforce each other.",
+    "Registration closes this Friday, but you need your student card.",
+    "The results support the original hypothesis.",
+  ];
 
   const defaultState = {
     notes: [
@@ -1704,6 +1750,18 @@
       rate: 0.92,
       voiceURI: "",
     },
+    training: {
+      dailyDate: "",
+      completedTaskIds: [],
+      session: {
+        mode: "",
+        index: 0,
+        score: 0,
+        items: [],
+        revealed: false,
+        feedback: "",
+      },
+    },
     literatureQuery: "",
     literatureFilter: "all",
     literatureExamFilter: "all",
@@ -1784,6 +1842,14 @@
         review: { ...fallback.review, ...(stored.review || {}) },
         vocabTest: { ...fallback.vocabTest, ...(stored.vocabTest || {}) },
         speech: { ...fallback.speech, ...(stored.speech || {}) },
+        training: {
+          ...fallback.training,
+          ...(stored.training || {}),
+          session: {
+            ...fallback.training.session,
+            ...(stored.training?.session || {}),
+          },
+        },
       };
     } catch {
       return cloneDefaultState();
@@ -1792,6 +1858,20 @@
 
   let state = loadState();
   let speechVoices = [];
+
+  function todayKey() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function ensureDailyTraining() {
+    const today = todayKey();
+    if (state.training.dailyDate !== today) {
+      state.training.dailyDate = today;
+      state.training.completedTaskIds = [];
+    }
+  }
+
+  ensureDailyTraining();
 
   const saveState = () => {
     try {
@@ -1874,6 +1954,7 @@
     home: ["首页", "今天学什么"],
     study: ["学习", "学习中心"],
     "study/words": ["学习 / 单词", "单词学习"],
+    "study/training": ["学习 / 训练中心", "单词训练中心"],
     "study/listening": ["学习 / 听力", "听力训练"],
     "study/speaking": ["学习 / 朗读", "跟读朗读"],
     "study/translation": ["学习 / 翻译", "翻译练习"],
@@ -1948,6 +2029,7 @@
             "book-open",
             [
               ["study/words", "单词"],
+              ["study/training", "训练中心"],
               ["study/listening", "听力"],
               ["study/speaking", "朗读"],
               ["study/translation", "翻译"],
@@ -2052,6 +2134,7 @@
         <div class="mobile-more-grid">
           ${[
             ["study/words", "单词", "type"],
+            ["study/training", "训练中心", "target"],
             ["study/listening", "听力", "headphones"],
             ["study/speaking", "朗读", "mic"],
             ["study/translation", "翻译", "languages"],
@@ -2292,7 +2375,13 @@
           </div>
           <div class="daily-grid">
             ${[
-              ["words", "单词", "复习 20 个词", 35, "type"],
+              [
+                "training",
+                "单词训练",
+                "卡片 · 图片 · 听力 · 拼写",
+                35,
+                "target",
+              ],
               ["listening", "听力", "校园注册场景", 0, "headphones"],
               ["articles", "阅读", "环境保护短文", 0, "book-open"],
               ["speaking", "口语", "问路对话", 0, "mic"],
@@ -2778,6 +2867,12 @@
                 <button class="toolbar-button" data-action="insert-english-block" title="英语内容块">${icon(
                   "languages",
                 )}</button>
+                <button class="toolbar-button" data-action="open-note-templates" title="笔记模板">${icon(
+                  "layers",
+                )}</button>
+                <button class="toolbar-button" data-action="ai-note-summary" title="AI 总结笔记">${icon(
+                  "sparkles",
+                )}</button>
               </div>
               <div
                 class="editor-content"
@@ -2972,6 +3067,13 @@
                 "用例句和发音建立真实语境",
                 "今日 20 词",
                 "type",
+              ],
+              [
+                "study/training",
+                "训练中心",
+                "卡片、图片、听音、拼写和跟读",
+                "每日 8 项任务",
+                "target",
               ],
               [
                 "study/listening",
@@ -3318,10 +3420,179 @@
     `;
   }
 
+  function renderStudyTraining() {
+    ensureDailyTraining();
+    const modes = [
+      {
+        id: "word-cards",
+        title: "单词卡片",
+        description: "正面单词、背面释义，快速建立识别记忆。",
+        icon: "layers",
+        group: "输入",
+        count: 12,
+      },
+      {
+        id: "image-association",
+        title: "图片联想",
+        description: "通过视觉场景猜测和记忆单词含义。",
+        icon: "image",
+        group: "输入",
+        count: 10,
+      },
+      {
+        id: "listening-choice",
+        title: "听音选义",
+        description: "听英语单词，从多个释义中选出正确答案。",
+        icon: "headphones",
+        group: "听力",
+        count: 10,
+      },
+      {
+        id: "spelling",
+        title: "拼写训练",
+        description: "根据释义和词频，完整拼写英文单词。",
+        icon: "edit",
+        group: "输出",
+        count: 20,
+      },
+      {
+        id: "cloze",
+        title: "例句填空",
+        description: "在真实句子中选择最合适的单词。",
+        icon: "quote",
+        group: "输出",
+        count: 10,
+      },
+      {
+        id: "shadowing",
+        title: "发音跟读",
+        description: "先听标准朗读，再录音跟读并自评。",
+        icon: "mic",
+        group: "口语",
+        count: 6,
+      },
+      {
+        id: "spaced-review",
+        title: "间隔复习",
+        description: "按遗忘时间安排复习，调整下一次间隔。",
+        icon: "refresh",
+        group: "复习",
+        count: state.words.filter(
+          (word) =>
+            word.reviewAt &&
+            new Date(word.reviewAt).getTime() <= Date.now(),
+        ).length,
+      },
+      {
+        id: "daily-words",
+        title: "每日新词",
+        description: "按词频和考试价值学习今天的 50 个新词。",
+        icon: "calendar",
+        group: "计划",
+        count: 50,
+      },
+    ];
+    const completed = state.training.completedTaskIds.length;
+    const progress = Math.round((completed / modes.length) * 100);
+    const dueCount = modes.find((mode) => mode.id === "spaced-review")?.count || 0;
+
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          "Daily Training",
+          "单词训练中心",
+          "每天用一组短训练完成输入、输出、发音和复习，所有结果都会回写到单词掌握度。",
+          `<button class="btn" data-action="start-daily-words">${icon(
+            "calendar",
+          )}开始今日 50 词</button>
+           <button class="btn soft" data-action="open-speech-settings">${icon(
+             "volume",
+           )}朗读设置</button>`,
+        )}
+
+        <section class="panel training-dashboard">
+          <div>
+            <div class="eyebrow">TODAY'S PROGRESS</div>
+            <h2>今日完成 ${completed} / ${modes.length} 项训练</h2>
+            <p>完成全部训练约需 20 分钟。系统会根据结果自动调整下次复习时间。</p>
+          </div>
+          <div class="training-progress-ring">
+            <div class="progress-ring"><strong>${progress}%</strong></div>
+          </div>
+          <div class="training-dashboard-meta">
+            <span>${icon("refresh")} 待复习 ${dueCount} 词</span>
+            <span>${icon("flame")} 连续学习 12 天</span>
+          </div>
+        </section>
+
+        ${["输入", "听力", "输出", "口语", "复习", "计划"]
+          .map(
+            (group) => `
+              <section class="section">
+                <div class="section-head">
+                  <div><h2>${group}训练</h2><p>${trainingGroupDescription(
+                    group,
+                  )}</p></div>
+                </div>
+                <div class="training-grid">
+                  ${modes
+                    .filter((mode) => mode.group === group)
+                    .map((mode) => {
+                      const isDone =
+                        state.training.completedTaskIds.includes(mode.id);
+                      return `
+                        <article class="training-card ${
+                          isDone ? "completed" : ""
+                        }">
+                          <div class="training-card-top">
+                            <span class="task-icon">${icon(mode.icon)}</span>
+                            ${
+                              isDone
+                                ? `<span class="training-done">${icon(
+                                    "check",
+                                  )}已完成</span>`
+                                : `<span class="note-category">${mode.count} 项</span>`
+                            }
+                          </div>
+                          <h3>${mode.title}</h3>
+                          <p>${mode.description}</p>
+                          <button class="btn ${
+                            isDone ? "ghost" : "primary"
+                          }" data-action="start-training-mode" data-mode="${
+                            mode.id
+                          }">${icon(
+                            isDone ? "refresh" : "play",
+                          )}${isDone ? "再练一次" : "开始训练"}</button>
+                        </article>
+                      `;
+                    })
+                    .join("")}
+                </div>
+              </section>`,
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  function trainingGroupDescription(group) {
+    return {
+      输入: "先建立音、形、义的初步连接。",
+      听力: "把拼写和声音直接连接起来。",
+      输出: "通过拼写和语境使用检验掌握程度。",
+      口语: "朗读、跟读并关注语音节奏。",
+      复习: "使用间隔复习减少遗忘。",
+      计划: "根据词频和考试目标安排每日任务。",
+    }[group];
+  }
+
   function renderStudyPage(route) {
     const page = route.split("/")[1];
     if (page === "words") {
       return renderVocabularyWorkspace();
+    }
+    if (page === "training") {
+      return renderStudyTraining();
     }
 
     if (page === "listening") {
@@ -5286,6 +5557,147 @@
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
+  function renderNoteTemplatesModal() {
+    const templates = [
+      {
+        id: "word",
+        title: "单词笔记",
+        description: "单词、音标、释义、词形和例句",
+        icon: "type",
+      },
+      {
+        id: "grammar",
+        title: "语法笔记",
+        description: "结构、规则、例句和易错点",
+        icon: "heading",
+      },
+      {
+        id: "reading",
+        title: "阅读笔记",
+        description: "文章摘要、长难句、观点和生词",
+        icon: "book-open",
+      },
+      {
+        id: "mistake",
+        title: "错题笔记",
+        description: "错因、正确答案和同类题提醒",
+        icon: "target",
+      },
+      {
+        id: "essay",
+        title: "作文笔记",
+        description: "立场、论据、句型和修改记录",
+        icon: "edit",
+      },
+      {
+        id: "class",
+        title: "课堂笔记",
+        description: "课程重点、疑问和课后任务",
+        icon: "notebook",
+      },
+    ];
+    openModal(
+      `
+        <div class="modal-header">
+          <div><h2>插入笔记模板</h2><p>选择结构后会插入到当前光标位置，不覆盖已有内容。</p></div>
+          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
+        </div>
+        <div class="modal-body">
+          <div class="note-template-grid">
+            ${templates
+              .map(
+                (template) => `
+                  <button class="note-template-card" data-action="insert-note-template" data-template="${
+                    template.id
+                  }">
+                    <span class="task-icon">${icon(template.icon)}</span>
+                    <strong>${template.title}</strong>
+                    <small>${template.description}</small>
+                  </button>`,
+              )
+              .join("")}
+          </div>
+        </div>
+      `,
+      "wide",
+    );
+  }
+
+  function insertNoteTemplate(template) {
+    const templates = {
+      word:
+        '<h2>单词</h2><p><strong>word</strong> /phonetic/</p><h3>释义</h3><p>中文释义</p><h3>词形变化</h3><p>过去式 / 过去分词 / 复数</p><h3>例句</h3><p class="english-text">Write an example sentence.</p><h3>我的记忆方法</h3><p></p>',
+      grammar:
+        "<h2>语法结构</h2><p><strong>Structure:</strong></p><h3>使用规则</h3><ul><li>规则一</li><li>规则二</li></ul><h3>例句</h3><p></p><h3>易错点</h3><p></p>",
+      reading:
+        "<h2>文章信息</h2><p>标题 / 来源 / 阅读时间</p><h3>核心观点</h3><p></p><h3>文章结构</h3><ol><li>Introduction</li><li>Main idea</li><li>Conclusion</li></ol><h3>生词与长难句</h3><p></p><h3>我的总结</h3><p></p>",
+      mistake:
+        "<h2>错题记录</h2><p>题目来源：</p><h3>我的错误答案</h3><p></p><h3>正确答案</h3><p></p><h3>错误原因</h3><p></p><h3>知识点</h3><p></p><h3>下次提醒</h3><p></p>",
+      essay:
+        "<h2>作文主题</h2><p></p><h3>中心立场</h3><p></p><h3>论证结构</h3><ol><li>观点一</li><li>观点二</li><li>让步与总结</li></ol><h3>高级句型</h3><p></p><h3>修改记录</h3><p></p>",
+      class:
+        "<h2>课堂主题</h2><p>日期 / 课程 / 老师</p><h3>重点内容</h3><ul><li></li></ul><h3>新词和短语</h3><p></p><h3>我的疑问</h3><p></p><h3>课后任务</h3><p></p>",
+    };
+    closeModal();
+    const editor = document.getElementById("editor-content");
+    if (!editor) return;
+    editor.focus();
+    document.execCommand("insertHTML", false, templates[template] || "");
+    updateEditorNote();
+  }
+
+  function renderNoteSummaryModal() {
+    const note = getRouteNote(getRoute().split("/")[1]);
+    if (!note) return;
+    const text = stripHTML(note.body);
+    const headings = [...note.body.matchAll(/<h[1-3][^>]*>(.*?)<\/h[1-3]>/gi)]
+      .map((match) => stripHTML(match[1]))
+      .filter(Boolean)
+      .slice(0, 6);
+    const sentences = text
+      .split(/[。！？.!?]+/)
+      .map((sentence) => sentence.trim())
+      .filter((sentence) => sentence.length > 5);
+    const summary =
+      sentences.slice(0, 3).join("。") ||
+      "这篇笔记还没有足够的正文内容，可以先补充重点和例句。";
+    openModal(
+      `
+        <div class="modal-header">
+          <div><h2>AI 笔记总结</h2><p>${escapeHTML(note.title)}</p></div>
+          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
+        </div>
+        <div class="modal-body">
+          <div class="note-summary-card">
+            <span class="field-label">内容总结</span>
+            <p>${escapeHTML(summary)}</p>
+          </div>
+          <div class="note-summary-card">
+            <span class="field-label">结构大纲</span>
+            ${
+              headings.length
+                ? `<ul>${headings
+                    .map((heading) => `<li>${escapeHTML(heading)}</li>`)
+                    .join("")}</ul>`
+                : "<p>建议添加标题、单词、例句和总结等结构。</p>"
+            }
+          </div>
+          <div class="note-summary-card">
+            <span class="field-label">复习建议</span>
+            <p>把释义、例句和易错点分别设置复习时间，比一次性重复整篇笔记更有效。</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-action="close-modal">关闭</button>
+          <button class="btn primary" data-action="insert-note-summary" data-summary="${escapeHTML(
+            summary,
+          )}">${icon("plus")}插入总结</button>
+        </div>
+      `,
+      "small",
+    );
+  }
+
   function renderWordImportModal() {
     openModal(
       `
@@ -5437,6 +5849,542 @@
     );
   }
 
+  function startTrainingMode(mode) {
+    ensureDailyTraining();
+    if (mode === "daily-words") {
+      const dailyWords = [...state.words]
+        .filter((word) => word.mastery === 0)
+        .sort(
+          (a, b) =>
+            (a.frequencyRank || 10_000_000) -
+            (b.frequencyRank || 10_000_000),
+        )
+        .slice(0, 50);
+      state.dailyWordIds = dailyWords.map((word) => word.id);
+      state.dailyCompletedIds = [];
+      state.activeWordDeck = "全部词库";
+      state.wordStatusFilter = "new";
+      state.wordPage = 0;
+      if (dailyWords[0]) state.activeWordId = dailyWords[0].id;
+      saveState();
+      openModal(
+        `
+          <div class="modal-header">
+            <div><h2>今日 50 词</h2><p>按词频和考试价值排序</p></div>
+            <button class="icon-button" data-action="close-modal">${icon("x")}</button>
+          </div>
+          <div class="modal-body">
+            <div class="daily-preview-list">
+              ${dailyWords
+                .slice(0, 12)
+                .map(
+                  (word, index) => `
+                    <div class="daily-preview-item">
+                      <span>${index + 1}</span>
+                      <div><strong>${escapeHTML(
+                        word.word,
+                      )}</strong><small>${escapeHTML(
+                        word.meaning,
+                      )}</small></div>
+                    </div>`,
+                )
+                .join("")}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-action="close-modal">稍后</button>
+            <button class="btn primary" data-action="begin-daily-words">${icon(
+              "play",
+            )}开始今日任务</button>
+          </div>
+        `,
+        "wide",
+      );
+      return;
+    }
+    if (mode === "spelling") {
+      const ids = [...state.words]
+        .filter((word) => word.mastery < 80)
+        .sort(
+          (a, b) =>
+            (a.frequencyRank || 10_000_000) -
+              (b.frequencyRank || 10_000_000) ||
+            a.mastery - b.mastery,
+        )
+        .slice(0, 20)
+        .map((word) => word.id);
+      state.vocabTest = {
+        active: true,
+        index: 0,
+        score: 0,
+        mode: "spelling",
+        wordIds: ids,
+        spellingCorrect: null,
+      };
+      renderSpellingTestModal();
+      return;
+    }
+
+    let items = [];
+    if (mode === "word-cards" || mode === "spaced-review") {
+      const due =
+        mode === "spaced-review"
+          ? state.words.filter(
+              (word) =>
+                word.reviewAt &&
+                new Date(word.reviewAt).getTime() <= Date.now(),
+            )
+          : [];
+      items = (due.length
+        ? due
+        : [...state.words].sort(
+            (a, b) =>
+              a.mastery - b.mastery ||
+              (a.frequencyRank || 10_000_000) -
+                (b.frequencyRank || 10_000_000),
+          )
+      )
+        .slice(0, mode === "word-cards" ? 12 : 10)
+        .map((word) => word.id);
+    } else if (mode === "image-association") {
+      items = VISUAL_ASSOCIATIONS.map((item) => item.word);
+    } else if (mode === "listening-choice") {
+      items = [...state.words]
+        .sort(
+          (a, b) =>
+            (a.frequencyRank || 10_000_000) -
+            (b.frequencyRank || 10_000_000),
+        )
+        .slice(0, 10)
+        .map((word) => word.id);
+    } else if (mode === "cloze") {
+      items = CLOZE_EXAMPLES.map((item) => item.answer);
+    } else if (mode === "shadowing") {
+      items = SHADOWING_SENTENCES;
+    }
+
+    state.training.session = {
+      mode,
+      index: 0,
+      score: 0,
+      items,
+      revealed: false,
+      feedback: "",
+    };
+    renderTrainingSessionModal();
+  }
+
+  function trainingWord(item) {
+    if (typeof item !== "string") return null;
+    return state.words.find(
+      (word) => word.id === item || word.word === item,
+    );
+  }
+
+  function startListeningQuestion(word) {
+    if (!word) return;
+    speakText(word.word || word, null, null);
+  }
+
+  function completeTrainingTask(mode) {
+    if (!state.training.completedTaskIds.includes(mode)) {
+      state.training.completedTaskIds.push(mode);
+    }
+    saveState();
+  }
+
+  function renderTrainingSessionModal() {
+    const session = state.training.session;
+    if (session.index >= session.items.length) {
+      completeTrainingTask(session.mode);
+      const total = session.items.length;
+      openModal(
+        `
+          <div class="modal-header">
+            <div><h2>训练完成</h2><p>${trainingModeTitle(
+              session.mode,
+            )}</p></div>
+            <button class="icon-button" data-action="close-modal">${icon("x")}</button>
+          </div>
+          <div class="modal-body">
+            <div class="empty-state" style="min-height:280px">
+              <div>
+                <span class="empty-icon">${icon("award")}</span>
+                <h3>${session.score} / ${total}</h3>
+                <p>训练结果已经写入单词掌握度和间隔复习计划。</p>
+                <button class="btn primary" data-action="training-return">${icon(
+                  "check",
+                )}返回训练中心</button>
+              </div>
+            </div>
+          </div>
+        `,
+        "small",
+      );
+      return;
+    }
+
+    const current = session.items[session.index];
+    const word = trainingWord(current);
+    let content = "";
+
+    if (session.mode === "word-cards") {
+      content = `
+        <div class="flashcard ${session.revealed ? "flipped" : ""}">
+          <div class="flashcard-inner">
+            <div class="flashcard-face">
+              <span class="flashcard-label">English Word</span>
+              <h3>${escapeHTML(word.word)}</h3>
+              <span class="phonetic">${escapeHTML(
+                word.phoneticUS || word.phonetic,
+              )}</span>
+              <button class="btn small" data-action="training-speak">${icon(
+                "volume",
+              )}朗读</button>
+            </div>
+            <div class="flashcard-face back">
+              <span class="flashcard-label">Meaning</span>
+              <h3>${escapeHTML(word.meaning)}</h3>
+              <p>${escapeHTML(
+                word.example ||
+                  word.definition ||
+                  `Review ${word.word} in context.`,
+              )}</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard-controls">
+          <button class="btn danger" data-action="training-known" data-known="false">${icon(
+            "refresh",
+          )}需复习</button>
+          <button class="btn soft" data-action="training-flip">${icon(
+            "eye",
+          )}${session.revealed ? "收起答案" : "查看答案"}</button>
+          <button class="btn primary" data-action="training-known" data-known="true">${icon(
+            "check",
+          )}我认识</button>
+        </div>
+      `;
+    } else if (session.mode === "image-association") {
+      const association = VISUAL_ASSOCIATIONS.find(
+        (item) => item.word === current,
+      );
+      const options = [
+        association.word,
+        ...VISUAL_ASSOCIATIONS.filter(
+          (item) => item.word !== association.word,
+        )
+          .slice(0, 3)
+          .map((item) => item.word),
+      ].sort((a, b) => a.localeCompare(b));
+      content = `
+        <div class="association-stage">
+          <div class="association-image" style="--association-color:${
+            association.color
+          }">${icon(association.icon)}</div>
+          <p>选择与图片最匹配的英语单词</p>
+          <div class="answer-list compact-options">
+            ${options
+              .map(
+                (option) => `
+                  <button class="answer-option" data-action="training-answer" data-answer="${escapeHTML(
+                    option,
+                  )}"><span>${escapeHTML(option)}</span></button>`,
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+    } else if (session.mode === "listening-choice") {
+      const meanings = state.words
+        .filter(
+          (item) =>
+            item.id !== word.id &&
+            item.meaning !== word.meaning,
+        )
+        .slice(session.index + 3, session.index + 6)
+        .map((item) => item.meaning);
+      const options = [word.meaning, ...meanings].sort(() =>
+        Math.random() - 0.5,
+      );
+      content = `
+        <div class="listening-training">
+          <button class="mic-button" data-action="training-speak">${icon(
+            "volume",
+          )}</button>
+          <h3>听音选择正确释义</h3>
+          <div class="answer-list compact-options">
+            ${options
+              .map(
+                (option) => `
+                  <button class="answer-option" data-action="training-answer" data-answer="${escapeHTML(
+                    option,
+                  )}"><span>${escapeHTML(option)}</span></button>`,
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+      window.setTimeout(() => speakText(word.word), 120);
+    } else if (session.mode === "cloze") {
+      const example = CLOZE_EXAMPLES.find(
+        (item) => item.answer === current,
+      );
+      const options = [
+        example.answer,
+        ...CLOZE_EXAMPLES.filter(
+          (item) => item.answer !== example.answer,
+        )
+          .slice(session.index + 2, session.index + 5)
+          .map((item) => item.answer),
+      ].sort(() => Math.random() - 0.5);
+      content = `
+        <div class="cloze-stage">
+          <div class="eyebrow">Fill in the blank</div>
+          <h3>${escapeHTML(example.sentence)}</h3>
+          <div class="answer-list compact-options">
+            ${options
+              .map(
+                (option) => `
+                  <button class="answer-option" data-action="training-answer" data-answer="${escapeHTML(
+                    option,
+                  )}"><span>${escapeHTML(option)}</span></button>`,
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+    } else if (session.mode === "shadowing") {
+      content = `
+        <div class="shadowing-stage">
+          <span class="task-icon">${icon("mic")}</span>
+          <h3>${escapeHTML(current)}</h3>
+          <div class="speaking-controls">
+            <button class="btn" data-action="training-speak">${icon(
+              "volume",
+            )}标准朗读</button>
+            <button class="btn soft" data-action="toggle-shadowing">${icon(
+              "mic",
+            )}开始跟读</button>
+          </div>
+          <p>先完整听一遍，再模仿重音、停顿和语调。</p>
+          <div class="editor-actions">
+            <button class="btn danger" data-action="training-rating" data-rating="again">${icon(
+              "refresh",
+            )}再听一次</button>
+            <button class="btn primary" data-action="training-rating" data-rating="good">${icon(
+              "check",
+            )}跟读完成</button>
+          </div>
+        </div>
+      `;
+    } else if (session.mode === "spaced-review") {
+      content = `
+        <div class="flashcard ${session.revealed ? "flipped" : ""}">
+          <div class="flashcard-inner">
+            <div class="flashcard-face">
+              <span class="flashcard-label">间隔复习</span>
+              <h3>${escapeHTML(word.word)}</h3>
+              <p>${escapeHTML(word.phoneticUS || word.phonetic)}</p>
+              <button class="btn small" data-action="training-speak">${icon(
+                "volume",
+              )}朗读</button>
+            </div>
+            <div class="flashcard-face back">
+              <span class="flashcard-label">释义</span>
+              <h3>${escapeHTML(word.meaning)}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard-controls">
+          <button class="btn danger" data-action="training-rating" data-rating="again">${icon(
+            "refresh",
+          )}重来</button>
+          <button class="btn" data-action="training-flip">${icon(
+            "eye",
+          )}${session.revealed ? "收起答案" : "查看答案"}</button>
+          <button class="btn soft" data-action="training-rating" data-rating="hard">${icon(
+            "clock",
+          )}困难</button>
+          <button class="btn primary" data-action="training-rating" data-rating="good">${icon(
+            "check",
+          )}掌握</button>
+        </div>
+      `;
+    }
+
+    openModal(
+      `
+        <div class="modal-header">
+          <div><h2>${trainingModeTitle(
+            session.mode,
+          )}</h2><p>第 ${session.index + 1} / ${
+            session.items.length
+          } 项 · 已答对 ${session.score}</p></div>
+          <button class="icon-button" data-action="close-modal">${icon("x")}</button>
+        </div>
+        <div class="modal-body">
+          ${content}
+          ${
+            session.feedback
+              ? `<div class="training-feedback ${
+                  session.feedback === "correct" ? "correct" : "incorrect"
+                }">${icon(
+                  session.feedback === "correct" ? "check" : "refresh",
+                )}${
+                  session.feedback === "correct"
+                    ? "回答正确"
+                    : `答案：${escapeHTML(
+                        word?.word || current,
+                      )}`
+                }</div>
+                <button class="btn primary" style="width:100%;margin-top:12px" data-action="training-next">下一项${icon(
+                  "chevronRight",
+                )}</button>`
+              : ""
+          }
+        </div>
+      `,
+      "wide",
+    );
+  }
+
+  function trainingModeTitle(mode) {
+    return {
+      "word-cards": "单词卡片",
+      "image-association": "图片联想",
+      "listening-choice": "听音选义",
+      spelling: "拼写训练",
+      cloze: "例句填空",
+      shadowing: "发音跟读",
+      "spaced-review": "间隔复习",
+    }[mode] || "单词训练";
+  }
+
+  function advanceTraining() {
+    state.training.session.index += 1;
+    state.training.session.revealed = false;
+    state.training.session.feedback = "";
+    renderTrainingSessionModal();
+  }
+
+  function applyWordTrainingResult(word, correct, rating = "good") {
+    if (!word) return;
+    if (correct) {
+      word.mastery = Math.min(100, word.mastery + 8);
+      const intervals = { easy: 7, good: 3, hard: 1, again: 0 };
+      const days = intervals[rating] ?? 3;
+      word.reviewAt =
+        days > 0
+          ? new Date(Date.now() + days * 86400000).toISOString()
+          : new Date(Date.now() + 10 * 60000).toISOString();
+    } else {
+      word.mastery = Math.max(0, word.mastery - 10);
+      word.reviewAt = new Date(Date.now() + 10 * 60000).toISOString();
+    }
+    if (
+      state.dailyWordIds.includes(word.id) &&
+      !state.dailyCompletedIds.includes(word.id)
+    ) {
+      state.dailyCompletedIds.push(word.id);
+    }
+    saveState();
+  }
+
+  function shadowingSimilarity(target, transcript) {
+    const normalize = (value) =>
+      String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9'\s]/g, " ")
+        .split(/\s+/)
+        .filter(Boolean);
+    const expected = normalize(target);
+    const actual = normalize(transcript);
+    if (!expected.length || !actual.length) return 0;
+    const used = new Set();
+    let matches = 0;
+    expected.forEach((word) => {
+      const index = actual.findIndex(
+        (candidate, candidateIndex) =>
+          !used.has(candidateIndex) && candidate === word,
+      );
+      if (index >= 0) {
+        used.add(index);
+        matches += 1;
+      }
+    });
+    const coverage = matches / expected.length;
+    const lengthPenalty =
+      Math.min(actual.length, expected.length) /
+      Math.max(actual.length, expected.length);
+    return Math.round((coverage * 0.8 + lengthPenalty * 0.2) * 100);
+  }
+
+  function startShadowingAttempt(targetText, button) {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const stage = button.closest(".shadowing-stage");
+    const existing = stage?.querySelector(".shadowing-feedback");
+    existing?.remove();
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang =
+        state.speech.accent === "en" ? "en-US" : state.speech.accent;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      button.classList.add("is-speaking");
+      let completed = false;
+
+      recognition.onresult = (event) => {
+        completed = true;
+        const transcript = event.results?.[0]?.[0]?.transcript || "";
+        const score = shadowingSimilarity(targetText, transcript);
+        button.classList.remove("is-speaking");
+        const feedback = document.createElement("div");
+        feedback.className = "shadowing-feedback";
+        feedback.innerHTML = `<strong>跟读完成度 ${score}%</strong><span>识别结果：${escapeHTML(
+          transcript,
+        )}</span>`;
+        stage?.appendChild(feedback);
+        state.training.session.score += score >= 70 ? 1 : 0;
+        showToast(
+          score >= 70
+            ? "跟读识别正确，可以继续下一句。"
+            : "已记录发音，再听一遍并模仿停顿和重音。",
+          score >= 70 ? "success" : "info",
+        );
+      };
+      recognition.onerror = () => {
+        button.classList.remove("is-speaking");
+        if (!completed) {
+          showToast("浏览器语音识别不可用，可以使用标准朗读后自评。");
+        }
+      };
+      recognition.onend = () => button.classList.remove("is-speaking");
+      try {
+        recognition.start();
+        showToast("正在听……请朗读当前句子。");
+      } catch {
+        button.classList.remove("is-speaking");
+        showToast("录音暂时无法启动，请检查麦克风权限。");
+      }
+      return;
+    }
+
+    button.classList.toggle("is-speaking");
+    if (button.classList.contains("is-speaking")) {
+      showToast("正在听……请跟随朗读。");
+      window.setTimeout(() => {
+        if (document.body.contains(button)) {
+          button.classList.remove("is-speaking");
+          showToast("跟读完成，请进行自评。", "success");
+        }
+      }, 1800);
+    }
+  }
+
   function renderSpellingTestModal() {
     const words = state.vocabTest.wordIds
       .map((id) => state.words.find((word) => word.id === id))
@@ -5447,6 +6395,7 @@
     }
     if (state.vocabTest.index >= words.length) {
       state.vocabTest.active = false;
+      completeTrainingTask("spelling");
       const score = state.vocabTest.score;
       openModal(
         `
@@ -6210,6 +7159,93 @@
       renderWordImportModal();
       return;
     }
+    if (action === "start-training-mode") {
+      startTrainingMode(element.dataset.mode);
+      return;
+    }
+    if (action === "training-speak") {
+      const session = state.training.session;
+      const item = session.items[session.index];
+      const word = trainingWord(item);
+      const text =
+        session.mode === "shadowing"
+          ? item
+          : word?.word || item;
+      speakText(text, null, element);
+      return;
+    }
+    if (action === "training-flip") {
+      state.training.session.revealed =
+        !state.training.session.revealed;
+      renderTrainingSessionModal();
+      return;
+    }
+    if (action === "training-answer") {
+      const session = state.training.session;
+      const item = session.items[session.index];
+      const word = trainingWord(item);
+      const answer = element.dataset.answer || "";
+      let correct = false;
+      if (session.mode === "image-association")
+        correct = answer === item;
+      else if (session.mode === "listening-choice")
+        correct = answer === word?.meaning;
+      else if (session.mode === "cloze")
+        correct = answer === item;
+      if (correct) session.score += 1;
+      session.feedback = correct ? "correct" : "incorrect";
+      applyWordTrainingResult(word, correct);
+      renderTrainingSessionModal();
+      return;
+    }
+    if (action === "training-known") {
+      const session = state.training.session;
+      const word = trainingWord(session.items[session.index]);
+      const known = element.dataset.known === "true";
+      session.revealed = true;
+      if (known) session.score += 1;
+      session.feedback = known ? "correct" : "incorrect";
+      applyWordTrainingResult(word, known);
+      renderTrainingSessionModal();
+      return;
+    }
+    if (action === "training-rating") {
+      const session = state.training.session;
+      if (session.mode === "shadowing") {
+        const rating = element.dataset.rating;
+        if (rating === "good") session.score += 1;
+        session.feedback =
+          rating === "good" ? "correct" : "incorrect";
+        if (rating === "good") {
+          completeTrainingTask("shadowing");
+        }
+        renderTrainingSessionModal();
+        return;
+      }
+      const word = trainingWord(session.items[session.index]);
+      const rating = element.dataset.rating || "good";
+      const correct = rating !== "again";
+      if (correct) session.score += 1;
+      session.feedback = correct ? "correct" : "incorrect";
+      session.revealed = true;
+      applyWordTrainingResult(word, correct, rating);
+      renderTrainingSessionModal();
+      return;
+    }
+    if (action === "training-next") {
+      advanceTraining();
+      return;
+    }
+    if (action === "toggle-shadowing") {
+      const session = state.training.session;
+      startShadowingAttempt(session.items[session.index], element);
+      return;
+    }
+    if (action === "training-return") {
+      closeModal();
+      navigate("study/training");
+      return;
+    }
     if (action === "start-daily-words") {
       const dailyWords = [...state.words]
         .filter((word) => word.mastery === 0)
@@ -6530,6 +7566,34 @@
         document.execCommand(rawCommand, false);
       }
       updateEditorNote();
+      return;
+    }
+    if (action === "open-note-templates") {
+      renderNoteTemplatesModal();
+      return;
+    }
+    if (action === "insert-note-template") {
+      insertNoteTemplate(element.dataset.template);
+      return;
+    }
+    if (action === "ai-note-summary") {
+      renderNoteSummaryModal();
+      return;
+    }
+    if (action === "insert-note-summary") {
+      closeModal();
+      const editor = document.getElementById("editor-content");
+      if (editor) {
+        editor.focus();
+        document.execCommand(
+          "insertHTML",
+          false,
+          `<h3>AI 总结</h3><p>${escapeHTML(
+            element.dataset.summary || "",
+          )}</p>`,
+        );
+        updateEditorNote();
+      }
       return;
     }
     if (action === "insert-english-block") {
