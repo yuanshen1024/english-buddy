@@ -1668,6 +1668,69 @@ h4 {
   gap: 7px;
 }
 
+.note-outline-list,
+.related-note-list {
+  display: grid;
+  gap: 4px;
+}
+
+.note-outline-list button,
+.related-note-list button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  text-align: left;
+}
+
+.note-outline-list button:hover,
+.related-note-list button:hover {
+  background: var(--surface-muted);
+  color: var(--accent);
+}
+
+.note-outline-list span {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.related-note-list button {
+  display: grid;
+  gap: 2px;
+}
+
+.related-note-list strong,
+.related-note-list span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-note-list strong {
+  font-size: 11px;
+}
+
+.related-note-list span,
+.side-empty {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.side-empty {
+  margin: 0;
+}
+
 .editor-actions .btn {
   width: 100%;
 }

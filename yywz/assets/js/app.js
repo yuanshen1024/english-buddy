@@ -7,19 +7,8 @@
   const APP_BASE = (
     document.querySelector('meta[name="app-base"]')?.getAttribute("content") || ""
   ).replace(/\/+$/, "");
-  const BUILTIN_VOCABULARY = [
-    ...(typeof window !== "undefined" &&
-    Array.isArray(window.ENGLISH_BUDDY_VOCABULARY)
-      ? window.ENGLISH_BUDDY_VOCABULARY
-      : []),
-    ...(typeof window !== "undefined" &&
-    Array.isArray(window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY)
-      ? window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY
-      : []),
-  ];
-  const BUILTIN_WORD_IDS = new Set(
-    BUILTIN_VOCABULARY.map((word) => word.id),
-  );
+  let BUILTIN_VOCABULARY = [];
+  let BUILTIN_WORD_IDS = new Set();
 
   const iconPaths = {
     home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
@@ -2258,24 +2247,28 @@
     }
   }
 
-  let state = loadState();
+  let state;
   let speechVoices = [];
 
-  if (state.training?.session?.mode === "image-association") {
-    state.training.session = {
-      mode: "",
-      index: 0,
-      score: 0,
-      items: [],
-      revealed: false,
-      feedback: "",
-    };
-  }
-  if (Array.isArray(state.training?.completedTaskIds)) {
-    state.training.completedTaskIds =
-      state.training.completedTaskIds.filter(
-        (id) => id !== "image-association",
-      );
+  function initializeState() {
+    state = loadState();
+    if (state.training?.session?.mode === "image-association") {
+      state.training.session = {
+        mode: "",
+        index: 0,
+        score: 0,
+        items: [],
+        revealed: false,
+        feedback: "",
+      };
+    }
+    if (Array.isArray(state.training?.completedTaskIds)) {
+      state.training.completedTaskIds =
+        state.training.completedTaskIds.filter(
+          (id) => id !== "image-association",
+        );
+    }
+    ensureDailyTraining();
   }
 
   function todayKey() {
@@ -2289,8 +2282,6 @@
       state.training.completedTaskIds = [];
     }
   }
-
-  ensureDailyTraining();
 
   const saveState = () => {
     try {
@@ -3016,6 +3007,43 @@
     return stripHTML(html).length;
   }
 
+  function noteReadingMinutes(note) {
+    return Math.max(1, Math.ceil(wordCount(note.body) / 450));
+  }
+
+  function getRelatedNotes(note) {
+    return state.notes
+      .filter(
+        (item) =>
+          item.id !== note.id &&
+          !item.archived &&
+          (item.category === note.category ||
+            (item.tags || []).some((tag) => (note.tags || []).includes(tag))),
+      )
+      .map((item) => ({
+        note: item,
+        score:
+          (item.category === note.category ? 2 : 0) +
+          (item.tags || []).filter((tag) =>
+            (note.tags || []).includes(tag),
+          ).length,
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          new Date(b.note.updatedAt) - new Date(a.note.updatedAt),
+      )
+      .slice(0, 4)
+      .map((item) => item.note);
+  }
+
+  function getNoteOutline(note) {
+    return [...String(note.body || "").matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)]
+      .map((match) => stripHTML(match[1]))
+      .filter(Boolean)
+      .slice(0, 8);
+  }
+
   function formatWordForms(forms) {
     const labels = {
       p: "过去式",
@@ -3076,9 +3104,15 @@
             <button class="btn" data-action="open-quick-record">${icon(
               "clock",
             )}快速记录</button>
+            <button class="btn" data-action="random-note-review">${icon(
+              "refresh",
+            )}今日回忆</button>
             <button class="btn soft" data-action="open-ai-organize">${icon(
               "sparkles",
             )}AI 整理</button>
+            <button class="btn soft" data-action="export-all-notes">${icon(
+              "file",
+            )}导出全部</button>
             <button class="btn primary" data-action="new-note">${icon(
               "plus",
             )}新建笔记</button>
@@ -3256,6 +3290,8 @@
         </div>
       `;
     }
+    const outline = getNoteOutline(note);
+    const relatedNotes = getRelatedNotes(note);
     return `
       <div class="page">
         <div class="editor-shell">
@@ -3282,6 +3318,8 @@
                 <span>${formatRelative(note.updatedAt)}更新</span>
                 <span>·</span>
                 <span>${wordCount(note.body)} 字</span>
+                <span>·</span>
+                <span>约 ${noteReadingMinutes(note)} 分钟阅读</span>
               </div>
               <div class="editor-toolbar" role="toolbar" aria-label="笔记格式">
                 ${[
@@ -3394,6 +3432,44 @@
               </section>
 
               <section class="panel side-panel">
+                <h3>${icon("list")}笔记大纲</h3>
+                ${
+                  outline.length
+                    ? `<div class="note-outline-list">${outline
+                        .map(
+                          (heading, index) =>
+                            `<button data-action="scroll-note-heading" data-index="${index}"><span>${
+                              index + 1
+                            }</span>${escapeHTML(heading)}</button>`,
+                        )
+                        .join("")}</div>`
+                    : `<p class="side-empty">添加标题后会自动生成笔记大纲。</p>`
+                }
+              </section>
+
+              <section class="panel side-panel">
+                <h3>${icon("layers")}相关笔记</h3>
+                ${
+                  relatedNotes.length
+                    ? `<div class="related-note-list">${relatedNotes
+                        .map(
+                          (item) => `
+                            <button data-action="open-note" data-id="${
+                              item.id
+                            }">
+                              <strong>${escapeHTML(item.title)}</strong>
+                              <span>${escapeHTML(
+                                (item.tags || []).slice(0, 3).join(" · ") ||
+                                  categoryName(item.category),
+                              )}</span>
+                            </button>`,
+                        )
+                        .join("")}</div>`
+                    : `<p class="side-empty">还没有同分类或相同标签的笔记。</p>`
+                }
+              </section>
+
+              <section class="panel side-panel">
                 <h3>${icon("target")}笔记操作</h3>
                 <div class="editor-actions">
                   <button class="btn small ${
@@ -3418,6 +3494,14 @@
                 }" data-id="${note.id}">${icon("archive")}${
                   note.archived ? "恢复笔记" : "归档笔记"
                 }</button>
+                <div class="editor-actions" style="margin-top:7px">
+                  <button class="btn small" data-action="duplicate-note" data-id="${
+                    note.id
+                  }">${icon("layers")}复制</button>
+                  <button class="btn small" data-action="export-note-markdown" data-id="${
+                    note.id
+                  }">${icon("file")}Markdown</button>
+                </div>
               </section>
 
               <button class="btn danger" data-action="delete-note" data-id="${
@@ -7553,7 +7637,7 @@
         },
         {
           label: "单词数据",
-          ok: Array.isArray(state.words) && state.words.length >= 8000,
+          ok: Array.isArray(state.words) && state.words.length >= 28000,
           detail: `${state.words.length} 个单词`,
         },
         {
@@ -7861,6 +7945,39 @@
     showToast("译文已复制。", "success");
   }
 
+  function downloadTextFile(filename, content, type = "text/plain") {
+    const blob = new Blob([content], { type: `${type};charset=utf-8` });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function noteToMarkdown(note) {
+    const body = String(note.body || "")
+      .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "# $1\n\n")
+      .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "## $1\n\n")
+      .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "### $1\n\n")
+      .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "- $1\n")
+      .replace(/<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi, "**$2**")
+      .replace(/<(em|i)[^>]*>([\s\S]*?)<\/\1>/gi, "*$2*")
+      .replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, "> $1\n\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    return `# ${note.title}\n\n分类：${categoryName(
+      note.category,
+    )}\n\n标签：${(note.tags || []).join("、") || "无"}\n\n${body}\n`;
+  }
+
   function renderAutomotiveTermModal(wordId) {
     const word = state.words.find((item) => item.id === wordId);
     if (!word) return;
@@ -7940,6 +8057,69 @@
     }
     if (action === "new-note") {
       newNote();
+      return;
+    }
+    if (action === "random-note-review") {
+      const notes = state.notes.filter((note) => !note.archived);
+      if (!notes.length) {
+        showToast("还没有可以回忆的笔记。");
+        return;
+      }
+      const note = notes[Math.floor(Math.random() * notes.length)];
+      navigate(`notes/${note.id}`);
+      showToast(`今日回忆：${note.title}`);
+      return;
+    }
+    if (action === "export-all-notes") {
+      downloadTextFile(
+        `english-buddy-notes-${todayKey()}.json`,
+        JSON.stringify(
+          {
+            exportedAt: new Date().toISOString(),
+            categories: state.categories,
+            notes: state.notes,
+          },
+          null,
+          2,
+        ),
+        "application/json",
+      );
+      showToast("全部笔记已导出。", "success");
+      return;
+    }
+    if (action === "duplicate-note") {
+      const source = getRouteNote(id);
+      if (!source) return;
+      const copy = createNote({
+        ...source,
+        id: uid("note"),
+        title: `${source.title}（副本）`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      navigate(`notes/${copy.id}`);
+      showToast("笔记已复制。", "success");
+      return;
+    }
+    if (action === "export-note-markdown") {
+      const note = getRouteNote(id);
+      if (!note) return;
+      downloadTextFile(
+        `${note.title.replace(/[\\/:*?"<>|]/g, "-")}.md`,
+        noteToMarkdown(note),
+        "text/markdown",
+      );
+      showToast("Markdown 已导出。", "success");
+      return;
+    }
+    if (action === "scroll-note-heading") {
+      const headings = document.querySelectorAll(
+        "#editor-content h1, #editor-content h2, #editor-content h3",
+      );
+      headings[Number(element.dataset.index || 0)]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       return;
     }
     if (action === "open-note") {
@@ -10174,5 +10354,28 @@
     showToast("操作暂时无法完成，请稍后重试。");
   });
 
-  renderApp();
+  async function bootstrap() {
+    const automotive = Array.isArray(
+      window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY,
+    )
+      ? window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY
+      : [];
+    let mainVocabulary = [];
+    try {
+      mainVocabulary = await window.ENGLISH_BUDDY_VOCABULARY_READY;
+    } catch (error) {
+      console.error("Vocabulary data failed to load:", error);
+      showToast(
+        "完整词库暂时无法加载，已进入基础词库模式。刷新页面可重试。",
+      );
+    }
+    BUILTIN_VOCABULARY = [...mainVocabulary, ...automotive];
+    BUILTIN_WORD_IDS = new Set(
+      BUILTIN_VOCABULARY.map((word) => word.id),
+    );
+    initializeState();
+    renderApp();
+  }
+
+  bootstrap();
 })();
