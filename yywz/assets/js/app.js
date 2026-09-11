@@ -164,6 +164,160 @@
     "The results support the original hypothesis.",
   ];
 
+  const TRANSLATION_DICTIONARY = {
+    "我想提高我的英语": "I’d like to improve my English.",
+    "我想提高英语": "I want to improve my English.",
+    "我怎么去车站": "How do I get to the station?",
+    "你明天上午有空吗": "Are you available tomorrow morning?",
+    "我想申请退款": "I would like to request a refund.",
+    "请给我推荐一家餐厅": "Could you recommend a restaurant?",
+    "这有助于提高记忆力": "This helps improve memory.",
+    "人工智能正在改变教育": "Artificial intelligence is changing education.",
+    "环境保护需要每个人参与": "Environmental protection requires everyone’s participation.",
+    "请问注册什么时候截止": "When does registration close?",
+    "我不明白这个问题": "I don’t understand this question.",
+    "你能再说慢一点吗": "Could you speak more slowly?",
+    "这个观点值得进一步讨论": "This idea deserves further discussion.",
+    "研究表明睡眠会影响记忆": "Research shows that sleep affects memory.",
+    "这项政策有利于可持续发展": "This policy supports sustainable development.",
+    "我已经完成今天的学习任务": "I have completed today’s learning tasks.",
+    "i would like to improve my english": "我想提高我的英语。",
+    "how do i get to the station": "我怎么去车站？",
+    "i would like to request a refund": "我想申请退款。",
+    "artificial intelligence is changing education": "人工智能正在改变教育。",
+    "environmental protection requires everyone's participation": "环境保护需要每个人参与。",
+    "research shows that sleep affects memory": "研究表明睡眠会影响记忆。",
+  };
+
+  const READING_PASSAGES = [
+    {
+      id: "passage-station",
+      title: "Asking for Directions",
+      category: "日常",
+      level: "A2",
+      minutes: 2,
+      english: [
+        "Excuse me. How do I get to the station?",
+        "Go straight for two blocks and turn left at the traffic lights.",
+        "The station will be on your right, next to the public library.",
+        "Thank you. How long does it take to walk there?",
+        "It should take about ten minutes.",
+      ],
+      chinese: [
+        "打扰一下，我怎么去车站？",
+        "直走两个街区，然后在红绿灯处左转。",
+        "车站就在你右边，公共图书馆旁边。",
+        "谢谢。步行到那里需要多久？",
+        "大约需要十分钟。",
+      ],
+    },
+    {
+      id: "passage-study",
+      title: "Building a Learning Habit",
+      category: "学习",
+      level: "B1",
+      minutes: 3,
+      english: [
+        "Language learning becomes easier when practice is part of a daily routine.",
+        "Short and regular study sessions are usually more effective than occasional long sessions.",
+        "Reviewing new words at increasing intervals helps move them into long-term memory.",
+        "It is also important to use new vocabulary in speaking and writing.",
+        "Progress may be slow, but consistent effort produces meaningful results.",
+      ],
+      chinese: [
+        "当练习成为日常习惯的一部分时，语言学习会变得更容易。",
+        "短而规律的学习通常比偶尔进行长时间学习更有效。",
+        "按逐渐延长的时间间隔复习新词，有助于把单词转入长期记忆。",
+        "在口语和写作中使用新词汇也很重要。",
+        "进步可能很慢，但持续努力会带来有意义的结果。",
+      ],
+    },
+    {
+      id: "passage-environment",
+      title: "Small Actions, Shared Expectations",
+      category: "考试",
+      level: "B2",
+      minutes: 3,
+      english: [
+        "Many people believe that individual action is too small to affect a global problem.",
+        "However, personal habits can shape what governments and companies consider normal.",
+        "Individual choices therefore do not replace public policy.",
+        "Instead, they can create the social pressure that makes stronger policy possible.",
+        "The most effective approach is to make private action and public systems reinforce each other.",
+      ],
+      chinese: [
+        "许多人认为，个人行动太小，无法影响全球性问题。",
+        "然而，个人习惯可以改变政府和企业眼中的常态。",
+        "因此，个人选择不会替代公共政策。",
+        "相反，它们可以形成推动更强政策的社会压力。",
+        "最有效的方法，是让个人行动与公共制度彼此促进。",
+      ],
+    },
+    {
+      id: "passage-ai",
+      title: "AI and Independent Learning",
+      category: "学术",
+      level: "B2",
+      minutes: 4,
+      english: [
+        "Artificial intelligence can provide immediate feedback and personalized practice.",
+        "However, access to more information does not automatically produce better learning.",
+        "Learners still need clear goals and the ability to judge the quality of information.",
+        "AI is most useful when it supports reflection rather than replacing it.",
+        "The aim is not to depend on the tool, but to become a more independent learner.",
+      ],
+      chinese: [
+        "人工智能可以提供即时反馈和个性化练习。",
+        "然而，获得更多信息并不会自动带来更好的学习。",
+        "学习者仍然需要明确目标，以及判断信息质量的能力。",
+        "当 AI 支持反思而不是替代反思时，它才最有价值。",
+        "目标不是依赖工具，而是成为更独立的学习者。",
+      ],
+    },
+    {
+      id: "passage-sleep",
+      title: "Sleep and Memory",
+      category: "学术",
+      level: "C1",
+      minutes: 4,
+      english: [
+        "Sleep plays an active role in memory consolidation.",
+        "During sleep, the brain reorganizes recently learned information.",
+        "This process can make knowledge easier to retrieve later.",
+        "Students who regularly lose sleep may therefore struggle with recall.",
+        "A consistent sleep schedule can be as important as repeated study.",
+      ],
+      chinese: [
+        "睡眠在记忆巩固中发挥着积极作用。",
+        "睡眠期间，大脑会重新组织最近学习的信息。",
+        "这一过程可以让知识在之后更容易被提取。",
+        "因此，经常睡眠不足的学生可能在回忆信息时遇到困难。",
+        "规律的睡眠时间表可能与反复学习同样重要。",
+      ],
+    },
+    {
+      id: "passage-career",
+      title: "Communicating at Work",
+      category: "商务",
+      level: "B1",
+      minutes: 3,
+      english: [
+        "Clear communication is essential in a successful team.",
+        "Before a meeting, decide what result you want to achieve.",
+        "Listen carefully and ask questions when something is unclear.",
+        "When you disagree, explain your reasoning rather than simply rejecting an idea.",
+        "Good communication turns different opinions into better decisions.",
+      ],
+      chinese: [
+        "清晰的沟通对一个成功的团队至关重要。",
+        "开会前，先确定你希望取得什么结果。",
+        "认真倾听，并在不清楚时提出问题。",
+        "当你不同意时，解释你的理由，而不是简单否定一个想法。",
+        "良好的沟通能把不同意见转化为更好的决策。",
+      ],
+    },
+  ];
+
   const defaultState = {
     notes: [
       {
@@ -1762,6 +1916,18 @@
         feedback: "",
       },
     },
+    translation: {
+      direction: "zh-en",
+      input: "我想提高我的英语。",
+      output:
+        "I’d like to improve my English. 这是一个自然、礼貌的表达，适合口语和目标陈述。",
+      status: "idle",
+      error: "",
+      style: "natural",
+      history: [],
+      activePassageId: "passage-station",
+      passageFilter: "全部",
+    },
     literatureQuery: "",
     literatureFilter: "all",
     literatureExamFilter: "all",
@@ -1849,6 +2015,13 @@
             ...fallback.training.session,
             ...(stored.training?.session || {}),
           },
+        },
+        translation: {
+          ...fallback.translation,
+          ...(stored.translation || {}),
+          history: Array.isArray(stored.translation?.history)
+            ? stored.translation.history
+            : fallback.translation.history,
         },
       };
     } catch {
@@ -1957,7 +2130,7 @@
     "study/training": ["学习 / 训练中心", "单词训练中心"],
     "study/listening": ["学习 / 听力", "听力训练"],
     "study/speaking": ["学习 / 朗读", "跟读朗读"],
-    "study/translation": ["学习 / 翻译", "翻译练习"],
+    "study/translation": ["学习 / 翻译与英语朗读", "翻译与英语朗读"],
     "study/plan": ["学习 / 学习计划", "学习计划"],
     speaking: ["AI 口语", "AI 英语口语"],
     exams: ["英语考试", "考试中心"],
@@ -3586,6 +3759,224 @@
     }[group];
   }
 
+  function renderTranslationWorkspace() {
+    const translation = state.translation;
+    const fromLanguage =
+      translation.direction === "zh-en" ? "中文" : "English";
+    const toLanguage =
+      translation.direction === "zh-en" ? "English" : "中文";
+    const categories = [
+      "全部",
+      ...new Set(READING_PASSAGES.map((passage) => passage.category)),
+    ];
+    const passages = READING_PASSAGES.filter(
+      (passage) =>
+        translation.passageFilter === "全部" ||
+        passage.category === translation.passageFilter,
+    );
+    const activePassage =
+      READING_PASSAGES.find(
+        (passage) => passage.id === translation.activePassageId,
+      ) ||
+      passages[0] ||
+      READING_PASSAGES[0];
+    const fullEnglish = activePassage.english.join(" ");
+
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          "Translation & Reading",
+          "翻译与英语朗读",
+          "支持中英双向翻译、在线翻译、历史记录、朗读跟读和学习笔记联动。",
+          `<button class="btn" data-action="swap-translation-direction">${icon(
+            "refresh",
+          )}切换方向</button>
+           <button class="btn soft" data-action="open-speech-settings">${icon(
+             "volume",
+           )}朗读设置</button>`,
+        )}
+
+        <section class="translation-workbench">
+          <div class="translation-direction">
+            <button class="course-chip ${
+              translation.direction === "zh-en" ? "active" : ""
+            }" data-action="set-translation-direction" data-direction="zh-en">中译英</button>
+            <button class="course-chip ${
+              translation.direction === "en-zh" ? "active" : ""
+            }" data-action="set-translation-direction" data-direction="en-zh">英译中</button>
+            <span>${fromLanguage} → ${toLanguage}</span>
+          </div>
+          <div class="translation-columns">
+            <article class="panel translation-box">
+              <div class="translation-box-head">
+                <div><span class="field-label">原文</span><strong>${fromLanguage}</strong></div>
+                <span>${translation.input.length} 字符</span>
+              </div>
+              <textarea id="translation-input" class="translation-textarea" placeholder="${
+                translation.direction === "zh-en"
+                  ? "输入中文，例如：我想提高我的英语。"
+                  : "Enter English text here."
+              }">${escapeHTML(translation.input)}</textarea>
+              <div class="translation-box-actions">
+                <button class="btn primary" data-action="translate-submit">${icon(
+                  "languages",
+                )}${translation.status === "loading" ? "正在翻译…" : "开始翻译"}</button>
+                <button class="btn" data-action="speak-translation-input">${icon(
+                  "volume",
+                )}朗读原文</button>
+                <button class="btn ghost" data-action="clear-translation">清空</button>
+              </div>
+            </article>
+            <article class="panel translation-box output-box">
+              <div class="translation-box-head">
+                <div><span class="field-label">译文</span><strong>${toLanguage}</strong></div>
+                <span>${translation.status === "success" ? "翻译完成" : ""}</span>
+              </div>
+              <div class="translation-output">
+                ${
+                  translation.status === "loading"
+                    ? `<div class="analysis-loading"><span class="spinner"></span><span>正在翻译，请稍候……</span></div>`
+                    : translation.status === "error"
+                      ? `<div class="translation-error"><span class="empty-icon">${icon(
+                          "refresh",
+                        )}</span><h3>暂时无法完成翻译</h3><p>${escapeHTML(
+                          translation.error ||
+                            "请检查网络或稍后重试。",
+                        )}</p><button class="btn primary" data-action="translate-submit">${icon(
+                          "refresh",
+                        )}重试</button></div>`
+                      : `<p>${escapeHTML(
+                          translation.output ||
+                            "翻译结果会显示在这里。",
+                        )}</p>`
+                }
+              </div>
+              <div class="translation-box-actions">
+                <button class="btn soft" data-action="speak-translation-output" ${
+                  translation.output ? "" : "disabled"
+                }>${icon("volume")}朗读译文</button>
+                <button class="btn" data-action="copy-translation" ${
+                  translation.output ? "" : "disabled"
+                }>${icon("file")}复制译文</button>
+                <button class="btn" data-action="save-translation-note" ${
+                  translation.output ? "" : "disabled"
+                }>${icon("plus")}加入笔记</button>
+              </div>
+            </article>
+          </div>
+          ${
+            translation.history.length
+              ? `<div class="translation-history">
+                  <span class="field-label">最近翻译</span>
+                  <div class="translation-history-list">
+                    ${translation.history
+                      .slice(0, 6)
+                      .map(
+                        (item, index) => `
+                          <button data-action="load-translation-history" data-index="${index}">
+                            <strong>${escapeHTML(
+                              item.input.slice(0, 32),
+                            )}</strong>
+                            <span>${escapeHTML(
+                              item.output.slice(0, 42),
+                            )}</span>
+                          </button>`,
+                      )
+                      .join("")}
+                  </div>
+                </div>`
+              : ""
+          }
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div><h2>英语朗读语料库</h2><p>按场景选择短文，支持逐句翻译、标准朗读和跟读评分。</p></div>
+          </div>
+          <div class="resource-filters">
+            ${categories
+              .map(
+                (category) => `
+                  <button class="course-chip ${
+                    translation.passageFilter === category ? "active" : ""
+                  }" data-action="filter-passages" data-filter="${escapeHTML(
+                    category,
+                  )}">${escapeHTML(category)}</button>`,
+              )
+              .join("")}
+          </div>
+          <div class="reading-library-layout">
+            <aside class="panel reading-passage-list">
+              ${passages
+                .map(
+                  (passage) => `
+                    <button class="reading-passage-item ${
+                      passage.id === activePassage.id ? "active" : ""
+                    }" data-action="select-reading-passage" data-id="${
+                      passage.id
+                    }">
+                      <span class="note-category">${escapeHTML(
+                        passage.category,
+                      )}</span>
+                      <strong>${escapeHTML(passage.title)}</strong>
+                      <small>${passage.level} · ${passage.minutes} 分钟</small>
+                    </button>`,
+                )
+                .join("")}
+            </aside>
+            <article class="panel reading-passage-content">
+              <div class="section-head">
+                <div><h2>${escapeHTML(
+                  activePassage.title,
+                )}</h2><p>${escapeHTML(
+                  activePassage.category,
+                )} · ${activePassage.level} · ${activePassage.minutes} 分钟</p></div>
+                <span class="tag">${activePassage.english.length} 句</span>
+              </div>
+              <div class="passage-actions">
+                <button class="btn primary" data-action="speak-passage" data-id="${
+                  activePassage.id
+                }">${icon("play")}朗读全文</button>
+                <button class="btn soft" data-action="shadow-passage" data-id="${
+                  activePassage.id
+                }">${icon("mic")}跟读全文</button>
+                <button class="btn" data-action="add-passage-note" data-id="${
+                  activePassage.id
+                }">${icon("plus")}加入笔记</button>
+              </div>
+              <div class="passage-sentences">
+                ${activePassage.english
+                  .map(
+                    (sentence, index) => `
+                      <div class="passage-sentence">
+                        <span class="passage-index">${index + 1}</span>
+                        <div>
+                          <p class="english-text">${escapeHTML(
+                            sentence,
+                          )}</p>
+                          <p class="passage-translation">${escapeHTML(
+                            activePassage.chinese[index] || "",
+                          )}</p>
+                        </div>
+                        <div class="passage-sentence-actions">
+                          <button class="icon-button" data-action="speak-text" data-text="${escapeHTML(
+                            sentence,
+                          )}" title="朗读句子">${icon("volume")}</button>
+                          <button class="icon-button" data-action="shadow-text" data-text="${escapeHTML(
+                            sentence,
+                          )}" title="跟读句子">${icon("mic")}</button>
+                        </div>
+                      </div>`,
+                  )
+                  .join("")}
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
   function renderStudyPage(route) {
     const page = route.split("/")[1];
     if (page === "words") {
@@ -3689,49 +4080,7 @@
     }
 
     if (page === "translation") {
-      return `
-        <div class="page narrow">
-          ${renderPageHeader(
-            "Translation",
-            "翻译练习",
-            "不追求逐字对应，先表达清楚，再优化语气。",
-            `<button class="btn soft" data-action="add-demo-note" data-kind="translation">${icon(
-              "plus",
-            )}加入笔记</button>`,
-          )}
-          <section class="split-workspace">
-            <div class="panel workspace-panel">
-              <div class="eyebrow">Translate into English</div>
-              <h2>我想提高我的英语。</h2>
-              <textarea class="textarea" id="translation-input" rows="8" placeholder="在这里输入你的翻译…">I want to improve my English.</textarea>
-              <div class="study-actions" style="margin-top:12px">
-                <button class="btn primary" data-action="check-translation">${icon(
-                  "sparkles",
-                )}AI 检查</button>
-                <button class="btn" data-action="clear-translation">清空</button>
-              </div>
-            </div>
-            <div class="panel workspace-panel">
-              <h2>参考表达</h2>
-              <p>你的句子语法正确，表达也很清楚。</p>
-              <div style="padding:18px;border-radius:8px;background:var(--surface-blue);margin-bottom:16px">
-                <div class="field-label">更自然的口语</div>
-                <p class="english-text" style="margin:0;font-family:var(--font-reading);font-size:18px">I’d like to improve my English.</p>
-              </div>
-              <div class="analysis-result-section">
-                <span>Natural alternative</span>
-                <strong>I’m working on improving my English.</strong>
-                <p>强调你正在持续投入，而不只是表达愿望。</p>
-              </div>
-              <div class="analysis-result-section">
-                <span>Useful phrase</span>
-                <strong>work on + doing</strong>
-                <p>持续改善或训练某项能力。</p>
-              </div>
-            </div>
-          </section>
-        </div>
-      `;
+      return renderTranslationWorkspace();
     }
 
     return `
@@ -6323,7 +6672,7 @@
   function startShadowingAttempt(targetText, button) {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    const stage = button.closest(".shadowing-stage");
+    const stage = button.closest(".shadowing-stage, .passage-sentence");
     const existing = stage?.querySelector(".shadowing-feedback");
     existing?.remove();
 
@@ -6993,6 +7342,105 @@
     state.review.flipped = false;
     saveState();
     renderReviewModal();
+  }
+
+  function normalizeTranslationKey(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[’‘]/g, "'")
+      .replace(/[。！？!?.,，、；;：:]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function localTranslation(value, direction) {
+    const key = normalizeTranslationKey(value);
+    if (!key) return "";
+    if (TRANSLATION_DICTIONARY[key]) return TRANSLATION_DICTIONARY[key];
+    const reverseKey = normalizeTranslationKey(
+      Object.values(TRANSLATION_DICTIONARY).find(
+        (translation) =>
+          normalizeTranslationKey(translation) === key,
+      ) || "",
+    );
+    if (reverseKey && TRANSLATION_DICTIONARY[reverseKey]) {
+      return TRANSLATION_DICTIONARY[reverseKey];
+    }
+    if (direction === "zh-en") {
+      return Object.entries(TRANSLATION_DICTIONARY).find(([, english]) =>
+        key.includes(normalizeTranslationKey(english)),
+      )?.[0] || "";
+    }
+    return Object.entries(TRANSLATION_DICTIONARY).find(([chinese]) =>
+      key.includes(normalizeTranslationKey(chinese)),
+    )?.[1] || "";
+  }
+
+  function decodeTranslationEntities(value) {
+    const parser = new DOMParser();
+    return parser.parseFromString(
+      `<textarea>${String(value || "")}</textarea>`,
+      "text/html",
+    ).querySelector("textarea").value;
+  }
+
+  async function performTranslation(value, direction) {
+    const text = String(value || "").trim();
+    if (!text) {
+      throw new Error("请输入需要翻译的内容。");
+    }
+    const local = localTranslation(text, direction);
+    if (local) return local;
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 9000);
+    try {
+      const pair = direction === "zh-en" ? "zh-CN|en-US" : "en-US|zh-CN";
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+          text,
+        )}&langpair=${encodeURIComponent(pair)}`,
+        { signal: controller.signal },
+      );
+      if (!response.ok) throw new Error(`翻译服务返回 ${response.status}`);
+      const payload = await response.json();
+      const translated = payload?.responseData?.translatedText;
+      if (!translated) throw new Error("没有获得翻译结果");
+      return decodeTranslationEntities(translated);
+    } catch (error) {
+      throw new Error(
+        error?.name === "AbortError"
+          ? "翻译服务响应超时，请稍后重试。"
+          : "暂时无法连接在线翻译，请检查网络后重试。",
+      );
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  function getReadingPassage(id) {
+    return (
+      READING_PASSAGES.find((passage) => passage.id === id) ||
+      READING_PASSAGES[0]
+    );
+  }
+
+  async function copyTextToClipboard(value) {
+    const text = String(value || "");
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+    showToast("译文已复制。", "success");
   }
 
   function handleAction(element, event) {
@@ -7852,15 +8300,170 @@
       speakText(text, 0.9);
       return;
     }
-    if (action === "check-translation") {
-      showToast("AI 正在检查翻译……");
+    if (action === "set-translation-direction") {
+      state.translation.direction = element.dataset.direction;
+      state.translation.output = "";
+      state.translation.status = "idle";
+      state.translation.error = "";
+      saveState();
+      renderApp();
+      return;
+    }
+    if (action === "swap-translation-direction") {
+      state.translation.direction =
+        state.translation.direction === "zh-en" ? "en-zh" : "zh-en";
+      state.translation.input =
+        state.translation.output || state.translation.input;
+      state.translation.output = "";
+      state.translation.status = "idle";
+      state.translation.error = "";
+      saveState();
+      renderApp();
+      return;
+    }
+    if (action === "translate-submit") {
       const input = document.getElementById("translation-input");
-      window.setTimeout(() => {
-        if (input) {
-          input.value = "I’d like to improve my English.";
-          showToast("翻译已优化。", "success");
-        }
-      }, 900);
+      if (input) state.translation.input = input.value;
+      const text = state.translation.input.trim();
+      if (!text) {
+        showToast("请先输入需要翻译的内容。");
+        return;
+      }
+      state.translation.status = "loading";
+      state.translation.error = "";
+      renderApp();
+      performTranslation(text, state.translation.direction)
+        .then((translated) => {
+          state.translation.output = translated;
+          state.translation.status = "success";
+          state.translation.history = [
+            {
+              input: text,
+              output: translated,
+              direction: state.translation.direction,
+              createdAt: new Date().toISOString(),
+            },
+            ...state.translation.history.filter(
+              (item) =>
+                item.input !== text ||
+                item.direction !== state.translation.direction,
+            ),
+          ].slice(0, 12);
+          saveState();
+          renderApp();
+        })
+        .catch((error) => {
+          state.translation.status = "error";
+          state.translation.error =
+            error?.message || "暂时无法完成翻译，请稍后重试。";
+          saveState();
+          renderApp();
+        });
+      return;
+    }
+    if (action === "speak-translation-input") {
+      speakText(
+        state.translation.input,
+        null,
+        element,
+        state.translation.direction === "en-zh" ? "en" : "zh",
+      );
+      return;
+    }
+    if (action === "speak-translation-output") {
+      speakText(
+        state.translation.output,
+        null,
+        element,
+        state.translation.direction === "zh-en" ? "en" : "zh",
+      );
+      return;
+    }
+    if (action === "copy-translation") {
+      copyTextToClipboard(state.translation.output);
+      return;
+    }
+    if (action === "save-translation-note") {
+      const note = createNote({
+        title: `翻译笔记：${state.translation.input.slice(0, 28)}`,
+        summary: state.translation.output.slice(0, 100),
+        body: `<h3>原文</h3><p>${escapeHTML(
+          state.translation.input,
+        )}</p><h3>译文</h3><p class="english-text">${escapeHTML(
+          state.translation.output,
+        )}</p>`,
+        category: "writing",
+        tags: ["翻译", "中英互译"],
+      });
+      showToast("翻译已加入英语笔记。", "success");
+      if (getRoute() === "notes") renderApp();
+      return note;
+    }
+    if (action === "load-translation-history") {
+      const item =
+        state.translation.history[Number(element.dataset.index || 0)];
+      if (item) {
+        state.translation.direction = item.direction;
+        state.translation.input = item.input;
+        state.translation.output = item.output;
+        state.translation.status = "success";
+        state.translation.error = "";
+        renderApp();
+      }
+      return;
+    }
+    if (action === "filter-passages") {
+      state.translation.passageFilter = element.dataset.filter;
+      const first = READING_PASSAGES.find(
+        (passage) =>
+          state.translation.passageFilter === "全部" ||
+          passage.category === state.translation.passageFilter,
+      );
+      if (first) state.translation.activePassageId = first.id;
+      saveState();
+      renderApp();
+      return;
+    }
+    if (action === "select-reading-passage") {
+      state.translation.activePassageId = element.dataset.id;
+      saveState();
+      renderApp();
+      return;
+    }
+    if (action === "speak-passage") {
+      const passage = getReadingPassage(element.dataset.id);
+      speakText(passage.english.join(" "), null, element, "en");
+      return;
+    }
+    if (action === "shadow-passage") {
+      const passage = getReadingPassage(element.dataset.id);
+      startShadowingAttempt(passage.english.join(" "), element);
+      return;
+    }
+    if (action === "shadow-text") {
+      startShadowingAttempt(element.dataset.text || "", element);
+      return;
+    }
+    if (action === "add-passage-note") {
+      const passage = getReadingPassage(element.dataset.id);
+      createNote({
+        title: `朗读笔记：${passage.title}`,
+        summary: `${passage.category} · ${passage.level} · ${passage.minutes} 分钟`,
+        body: `<h2>${escapeHTML(
+          passage.title,
+        )}</h2>${passage.english
+          .map(
+            (sentence, index) =>
+              `<p class="english-text">${escapeHTML(
+                sentence,
+              )}</p><p>${escapeHTML(passage.chinese[index] || "")}</p>`,
+          )
+          .join("")}`,
+        category: "reading",
+        tags: ["朗读", passage.category, "英语素材"],
+        important: true,
+      });
+      showToast("朗读语料已加入笔记。", "success");
       return;
     }
     if (action === "clear-translation") {
@@ -8132,8 +8735,7 @@
       return [];
     }
     speechVoices = window.speechSynthesis
-      .getVoices()
-      .filter((voice) => /^en(?:-|$)/i.test(voice.lang || ""));
+      .getVoices();
     return speechVoices;
   }
 
@@ -8177,6 +8779,8 @@
           ? ["samantha", "ava", "alex", "allison", "us english", "american"]
           : accent === "en-AU"
             ? ["karen", "matilda", "australian"]
+            : accent === "zh"
+              ? ["tingting", "meijia", "sinji", "chinese"]
             : [];
     preferredNames.forEach((preferred, index) => {
       if (name.includes(preferred)) score += 50 - index;
@@ -8189,10 +8793,14 @@
     const voices = refreshSpeechVoices();
     const filtered =
       accent === "en"
-        ? voices
-        : voices.filter((voice) =>
-            (voice.lang || "").toLowerCase().startsWith(accent.toLowerCase()),
-          );
+        ? voices.filter((voice) => /^en(?:-|$)/i.test(voice.lang || ""))
+        : accent === "zh"
+          ? voices.filter((voice) => /^zh(?:-|$)/i.test(voice.lang || ""))
+          : voices.filter((voice) =>
+              (voice.lang || "")
+                .toLowerCase()
+                .startsWith(accent.toLowerCase()),
+            );
     return [...filtered].sort(
       (a, b) =>
         voiceScore(b, accent) - voiceScore(a, accent) ||
@@ -8200,7 +8808,12 @@
     );
   }
 
-  function speakText(text, requestedRate = null, button = null) {
+  function speakText(
+    text,
+    requestedRate = null,
+    button = null,
+    language = "en",
+  ) {
     const value = String(text || "").trim();
     if (!value) return;
     if (
@@ -8217,10 +8830,20 @@
 
     return waitForSpeechVoices().then((voices) => {
       const selectedVoice =
-        voices.find(
+        (language === "zh"
+          ? voices.filter((voice) => /^zh(?:-|$)/i.test(voice.lang || ""))
+          : voices
+        ).find(
           (voice) => voice.voiceURI === state.speech.voiceURI,
-        ) || getVoicesForAccent(state.speech.accent)[0] ||
-        voices[0] ||
+        ) ||
+        (language === "zh"
+          ? getVoicesForAccent("zh")[0]
+          : getVoicesForAccent(state.speech.accent)[0]) ||
+        voices.find((voice) =>
+          language === "zh"
+            ? /^zh(?:-|$)/i.test(voice.lang || "")
+            : /^en(?:-|$)/i.test(voice.lang || ""),
+        ) ||
         null;
       const rate = Math.min(
         1.5,
@@ -8241,7 +8864,11 @@
         const createUtterance = (voice) => {
           const utterance = new SpeechSynthesisUtterance(value);
           utterance.lang =
-            state.speech.accent === "en" ? "en-US" : state.speech.accent;
+            language === "zh"
+              ? "zh-CN"
+              : state.speech.accent === "en"
+                ? "en-US"
+                : state.speech.accent;
           utterance.rate = rate;
           utterance.pitch = 1;
           utterance.volume = 1;
@@ -8921,6 +9548,10 @@
           next.setSelectionRange(position, position);
         }
       }, 220);
+    }
+    if (target.id === "translation-input") {
+      state.translation.input = target.value;
+      scheduleSave();
     }
   });
 
