@@ -2112,10 +2112,12 @@
     wordQuery: "",
     wordPage: 0,
     wordStatusFilter: "all",
+    wordLetter: "全部",
     dailyWordIds: [],
     dailyCompletedIds: [],
     automotiveQuery: "",
     automotiveCategory: "全部",
+    automotiveLetter: "全部",
     automotivePage: 0,
     speech: {
       accent: "en-GB",
@@ -2157,11 +2159,13 @@
     speechQuery: "",
     speechCategory: "全部",
     speechLevel: "全部",
+    speechLetter: "全部",
     speechPage: 0,
     speechSavedIds: [],
     activeSpeechId: "speech-000001",
     businessQuery: "",
     businessCategory: "全部",
+    businessLetter: "全部",
     businessPage: 0,
     businessSavedIds: [],
     literatureQuery: "",
@@ -3053,6 +3057,45 @@
     return stripHTML(html).length;
   }
 
+  const ALPHABET_LETTERS = [
+    "全部",
+    ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
+    "#",
+  ];
+
+  function firstLetter(value) {
+    const match = String(value || "")
+      .trim()
+      .match(/[A-Za-z]/);
+    return match ? match[0].toUpperCase() : "#";
+  }
+
+  function sortAlphabetically(items, selector = (item) => item.word) {
+    return [...items].sort((a, b) =>
+      String(selector(a) || "").localeCompare(
+        String(selector(b) || ""),
+        "en",
+        {
+          sensitivity: "base",
+          numeric: true,
+        },
+      ),
+    );
+  }
+
+  function renderAlphabetFilter(activeLetter, action) {
+    return `
+      <div class="alphabet-filter" aria-label="首字母筛选">
+        ${ALPHABET_LETTERS.map(
+          (letter) => `
+            <button class="${
+              activeLetter === letter ? "active" : ""
+            }" data-action="${action}" data-letter="${letter}">${letter}</button>`,
+        ).join("")}
+      </div>
+    `;
+  }
+
   function noteReadingMinutes(note) {
     return Math.max(1, Math.ceil(wordCount(note.body) / 450));
   }
@@ -3732,6 +3775,11 @@
         if (state.wordStatusFilter === "mastered") return word.mastery >= 80;
         return true;
       })
+      .filter(
+        (word) =>
+          state.wordLetter === "全部" ||
+          firstLetter(word.word) === state.wordLetter,
+      )
       .filter((word) =>
         `${word.word} ${word.meaning} ${word.definition || ""} ${
           word.forms || ""
@@ -3739,15 +3787,19 @@
           .toLowerCase()
           .includes(query),
       );
+    const sortedWords = sortAlphabetically(words);
     const activeWord =
-      words.find((word) => word.id === state.activeWordId) ||
-      words[0] ||
+      sortedWords.find((word) => word.id === state.activeWordId) ||
+      sortedWords[0] ||
       state.words.find((word) => word.id === state.activeWordId) ||
       state.words[0];
     const pageSize = 80;
-    const totalPages = Math.max(1, Math.ceil(words.length / pageSize));
+    const totalPages = Math.max(
+      1,
+      Math.ceil(sortedWords.length / pageSize),
+    );
     const wordPage = Math.min(state.wordPage, totalPages - 1);
-    const visibleWords = words.slice(
+    const visibleWords = sortedWords.slice(
       wordPage * pageSize,
       wordPage * pageSize + pageSize,
     );
@@ -3863,6 +3915,8 @@
           }
         </div>
 
+        ${renderAlphabetFilter(state.wordLetter, "set-word-letter")}
+
         <div class="vocabulary-layout">
           <aside class="panel vocabulary-decks">
             <div class="category-title"><span>我的词库</span></div>
@@ -3896,9 +3950,12 @@
             <div class="vocabulary-list-head">
               <div>
                 <h2>${escapeHTML(state.activeWordDeck)}</h2>
-                <p>${words.length} 个单词 · 当前显示 ${
-                  words.length ? wordPage * pageSize + 1 : 0
-                }-${Math.min((wordPage + 1) * pageSize, words.length)}</p>
+                <p>${sortedWords.length} 个单词 · 当前显示 ${
+                  sortedWords.length ? wordPage * pageSize + 1 : 0
+                }-${Math.min(
+                  (wordPage + 1) * pageSize,
+                  sortedWords.length,
+                )}</p>
               </div>
               <label class="search-field compact">
                 ${icon("search")}
@@ -4449,10 +4506,23 @@
         .toLowerCase()
         .includes(query);
     });
+    const filteredTerms = sortAlphabetically(
+      terms.filter(
+        (word) =>
+          state.automotiveLetter === "全部" ||
+          firstLetter(word.word) === state.automotiveLetter,
+      ),
+    );
     const pageSize = 60;
-    const totalPages = Math.max(1, Math.ceil(terms.length / pageSize));
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filteredTerms.length / pageSize),
+    );
     const page = Math.min(state.automotivePage, totalPages - 1);
-    const visible = terms.slice(page * pageSize, page * pageSize + pageSize);
+    const visible = filteredTerms.slice(
+      page * pageSize,
+      page * pageSize + pageSize,
+    );
     const mastered = allTerms.filter((word) => word.mastery >= 80).length;
     const learning = allTerms.filter(
       (word) => word.mastery > 0 && word.mastery < 80,
@@ -4509,11 +4579,15 @@
             )
             .join("")}
         </div>
+        ${renderAlphabetFilter(
+          state.automotiveLetter,
+          "set-automotive-letter",
+        )}
 
         <div class="automotive-layout">
           <section class="panel automotive-glossary">
             <div class="section-head">
-              <div><h2>汽车术语表</h2><p>${terms.length} 个匹配词条</p></div>
+              <div><h2>汽车术语表</h2><p>${filteredTerms.length} 个匹配词条</p></div>
             </div>
             <div class="automotive-term-grid">
               ${visible
@@ -4638,10 +4712,23 @@
         .toLowerCase()
         .includes(query);
     });
+    const filteredTerms = sortAlphabetically(
+      terms.filter(
+        (word) =>
+          state.businessLetter === "全部" ||
+          firstLetter(word.word) === state.businessLetter,
+      ),
+    );
     const pageSize = 80;
-    const totalPages = Math.max(1, Math.ceil(terms.length / pageSize));
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filteredTerms.length / pageSize),
+    );
     const page = Math.min(state.businessPage, totalPages - 1);
-    const visible = terms.slice(page * pageSize, page * pageSize + pageSize);
+    const visible = filteredTerms.slice(
+      page * pageSize,
+      page * pageSize + pageSize,
+    );
     const mastered = businessLibrary.filter(
       (word) => word.mastery >= 80,
     ).length;
@@ -4698,9 +4785,13 @@
             )
             .join("")}
         </div>
+        ${renderAlphabetFilter(
+          state.businessLetter,
+          "set-business-letter",
+        )}
         <section class="panel automotive-glossary">
           <div class="section-head">
-            <div><h2>商务术语表</h2><p>${terms.length} 个匹配词条</p></div>
+            <div><h2>商务术语表</h2><p>${filteredTerms.length} 个匹配词条</p></div>
           </div>
           <div class="automotive-term-grid">
             ${visible
@@ -4793,10 +4884,24 @@
         .toLowerCase()
         .includes(query);
     });
+    const sortedFiltered = sortAlphabetically(
+      filtered.filter(
+        (item) =>
+          state.speechLetter === "全部" ||
+          firstLetter(item.word) === state.speechLetter,
+      ),
+      (item) => item.word,
+    );
     const pageSize = 80;
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const totalPages = Math.max(
+      1,
+      Math.ceil(sortedFiltered.length / pageSize),
+    );
     const page = Math.min(state.speechPage, totalPages - 1);
-    const visible = filtered.slice(page * pageSize, page * pageSize + pageSize);
+    const visible = sortedFiltered.slice(
+      page * pageSize,
+      page * pageSize + pageSize,
+    );
     const words = new Set(speechLibrary.map((item) => item.word)).size;
 
     return `
@@ -4855,6 +4960,7 @@
             )
             .join("")}
         </div>
+        ${renderAlphabetFilter(state.speechLetter, "set-speech-letter")}
         <div class="speech-library-grid">
           ${visible
             .map(
@@ -6576,12 +6682,14 @@
         .toLowerCase()
         .includes(normalized),
     );
-    const matchingWords = state.words.filter((word) =>
-      `${word.word} ${word.meaning} ${word.definition || ""} ${
-        word.forms || ""
-      } ${word.phonetic} ${word.deck} ${(word.tags || []).join(" ")}`
-        .toLowerCase()
-        .includes(normalized),
+    const matchingWords = sortAlphabetically(
+      state.words.filter((word) =>
+        `${word.word} ${word.meaning} ${word.definition || ""} ${
+          word.forms || ""
+        } ${word.phonetic} ${word.deck} ${(word.tags || []).join(" ")}`
+          .toLowerCase()
+          .includes(normalized),
+      ),
     );
     const matchingBooks = state.books.filter((book) =>
       `${book.title} ${book.author} ${book.publisher} ${book.description} ${book.tags.join(
@@ -8958,8 +9066,20 @@
       renderApp();
       return;
     }
+    if (action === "set-word-letter") {
+      state.wordLetter = element.dataset.letter;
+      state.wordPage = 0;
+      renderApp();
+      return;
+    }
     if (action === "filter-automotive") {
       state.automotiveCategory = element.dataset.filter;
+      state.automotivePage = 0;
+      renderApp();
+      return;
+    }
+    if (action === "set-automotive-letter") {
+      state.automotiveLetter = element.dataset.letter;
       state.automotivePage = 0;
       renderApp();
       return;
@@ -10152,6 +10272,12 @@
       renderApp();
       return;
     }
+    if (action === "set-business-letter") {
+      state.businessLetter = element.dataset.letter;
+      state.businessPage = 0;
+      renderApp();
+      return;
+    }
     if (action === "business-page-prev" || action === "business-page-next") {
       state.businessPage = Math.max(
         0,
@@ -10185,6 +10311,12 @@
     }
     if (action === "filter-speech-category") {
       state.speechCategory = element.dataset.category;
+      state.speechPage = 0;
+      renderApp();
+      return;
+    }
+    if (action === "set-speech-letter") {
+      state.speechLetter = element.dataset.letter;
       state.speechPage = 0;
       renderApp();
       return;
