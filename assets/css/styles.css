@@ -4254,6 +4254,91 @@ h4 {
   background: white;
 }
 
+.speech-levels {
+  margin-top: -10px;
+}
+
+.speech-library-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.speech-library-card {
+  display: flex;
+  min-height: 230px;
+  flex-direction: column;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.speech-library-card:hover {
+  border-color: #cbd7e9;
+  box-shadow: var(--shadow);
+}
+
+.speech-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.speech-card-head > div {
+  display: flex;
+  gap: 5px;
+}
+
+.speech-card-head .is-saved {
+  color: var(--warning);
+}
+
+.speech-english {
+  margin: 14px 0 7px;
+  font-family: var(--font-reading);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.speech-chinese {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.speech-word {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.speech-word strong {
+  font-family: var(--font-reading);
+  font-size: 15px;
+}
+
+.speech-word span {
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.speech-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 13px;
+}
+
 .article-reader-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
@@ -4865,6 +4950,10 @@ h4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .speech-library-grid {
+    grid-template-columns: 1fr;
+  }
+
   .article-reader-layout {
     grid-template-columns: 1fr;
   }
@@ -5205,11 +5294,15 @@ h4 {
   .form-grid.two,
   .literature-grid,
   .resource-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .collection-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .speech-library-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .translation-direction {

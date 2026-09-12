@@ -17,6 +17,9 @@ diagnostics, manufacturing, business and driving safety.
 study literature guides. These are self-authored learning materials, not
 fabricated citations or copies of published papers.
 
+`speech-library.json.gz` contains 56,800 word and short-sentence read-aloud
+entries generated from 1,136 vocabulary items and 50 speaking patterns.
+
 Regenerate after obtaining the source CSV:
 
 ```bash
