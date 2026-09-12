@@ -147,36 +147,28 @@ def main() -> None:
     if len(candidates) < words_per_frame:
         raise SystemExit("Not enough vocabulary entries for the speech library.")
 
-    entries = []
-    index = 1
-    for frame_index, (english, chinese, category) in enumerate(FRAMES):
-        for item in candidates:
-            word = str(item["word"])
-            meaning = str(item["meaning"])
-            entries.append(
-                {
-                    "id": f"speech-{index:06d}",
-                    "word": word,
-                    "meaning": meaning,
-                    "english": english.format(word=word),
-                    "chinese": chinese.format(word=word),
-                    "category": category,
-                    "deck": item.get("deck") or "高频英语",
-                    "level": (
-                        "A2"
-                        if frame_index < 10
-                        else "B1"
-                        if frame_index < 25
-                        else "B2"
-                    ),
-                    "readingSeconds": 3 + ((index + frame_index) % 5),
-                }
-            )
-            index += 1
-
-    entries = entries[:TARGET_COUNT]
     payload = json.dumps(
-        entries,
+        {
+            "version": 1,
+            "targetCount": TARGET_COUNT,
+            "words": [
+                {
+                    "word": str(item["word"]),
+                    "meaning": str(item["meaning"]),
+                    "deck": item.get("deck") or "高频英语",
+                    "frequencyRank": item.get("frequencyRank") or 10_000_000,
+                }
+                for item in candidates
+            ],
+            "frames": [
+                {
+                    "english": english,
+                    "chinese": chinese,
+                    "category": category,
+                }
+                for english, chinese, category in FRAMES
+            ],
+        },
         ensure_ascii=False,
         separators=(",", ":"),
     ).encode("utf-8")
@@ -184,7 +176,7 @@ def main() -> None:
     with gzip.open(OUTPUT_PATH, "wb", compresslevel=9) as output:
         output.write(payload)
     print(
-        f"Generated {len(entries)} speech entries from "
+        f"Generated {TARGET_COUNT} speech entries from "
         f"{words_per_frame} words and {len(FRAMES)} frames: {OUTPUT_PATH}"
     )
 
