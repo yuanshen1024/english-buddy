@@ -3184,6 +3184,39 @@ h4 {
   width: 100%;
 }
 
+.daily-word-start {
+  display: grid;
+  width: min(360px, 42vw);
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.daily-word-start .task-icon {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+}
+
+.daily-word-start strong,
+.daily-word-start small {
+  display: block;
+}
+
+.daily-word-start strong {
+  font-size: 12px;
+}
+
+.daily-word-start small {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
 .vocabulary-decks,
 .vocabulary-detail {
   position: sticky;
@@ -5375,6 +5408,16 @@ h4 {
   }
 
   .daily-word-progress {
+    width: 100%;
+  }
+
+  .daily-word-start {
+    width: 100%;
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .daily-word-start .btn {
+    grid-column: 1 / -1;
     width: 100%;
   }
 

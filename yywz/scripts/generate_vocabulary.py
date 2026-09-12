@@ -118,7 +118,7 @@ def main() -> None:
         default=Path("/private/tmp/ecdict.csv"),
         help="Path to the ECDICT CSV file.",
     )
-    parser.add_argument("--count", type=int, default=28000)
+    parser.add_argument("--count", type=int, default=58000)
     parser.add_argument("--output", type=Path, default=OUTPUT_PATH)
     args = parser.parse_args()
 
@@ -166,6 +166,8 @@ def main() -> None:
 
     for index, entry in enumerate(selected, start=1):
         entry["id"] = f"bank-word-{index:05d}"
+        if index > 8000:
+            entry["definition"] = ""
         entry.pop("_rank", None)
 
     payload = json.dumps(
