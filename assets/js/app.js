@@ -2281,6 +2281,9 @@
     if (state.collectionCategory === "all") {
       state.collectionCategory = "全部";
     }
+    if (!state.dailyWordIds.length) {
+      state.dailyCompletedIds = [];
+    }
     ensureDailyTraining();
   }
 
@@ -3732,11 +3735,15 @@
       state.words.reduce((sum, word) => sum + word.mastery, 0) /
         Math.max(state.words.length, 1),
     );
-    const dailyTarget = state.dailyWordIds.length || 50;
-    const dailyCompleted = Math.min(
-      new Set(state.dailyCompletedIds).size,
-      dailyTarget,
-    );
+    const dailyStarted = state.dailyWordIds.length > 0;
+    const dailyTarget = dailyStarted ? state.dailyWordIds.length : 50;
+    const dailyCompleted = dailyStarted
+      ? new Set(
+          state.dailyCompletedIds.filter((id) =>
+            state.dailyWordIds.includes(id),
+          ),
+        ).size
+      : 0;
     const dailyProgress = Math.round(
       (dailyCompleted / Math.max(dailyTarget, 1)) * 100,
     );
@@ -3798,26 +3805,34 @@
               )
               .join("")}
           </div>
-          <div class="daily-word-progress" data-daily-progress="${dailyProgress}">
-            <div class="daily-progress-top">
-              <span>${icon("flame")}今日单词训练</span>
-              <strong>${dailyCompleted}<small> / ${dailyTarget}</small></strong>
-            </div>
-            <div class="daily-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="${dailyTarget}" aria-valuenow="${dailyCompleted}">
-              <span class="daily-progress-fill" style="width:${dailyProgress}%"></span>
-            </div>
-            <div class="daily-progress-bottom">
-              <span>${dailyProgress}% 已完成</span>
-              <span>${Math.max(dailyTarget - dailyCompleted, 0)} 个剩余</span>
-            </div>
-            <button class="btn small ${
-              dailyProgress >= 100 ? "ghost" : "primary"
-            }" data-action="${
-              state.dailyWordIds.length ? "begin-daily-words" : "start-daily-words"
-            }">${icon(
-              dailyProgress >= 100 ? "check" : "play",
-            )}${dailyProgress >= 100 ? "今日已完成" : "继续今日任务"}</button>
-          </div>
+          ${
+            dailyStarted
+              ? `<div class="daily-word-progress" data-daily-progress="${dailyProgress}">
+                  <div class="daily-progress-top">
+                    <span>${icon("flame")}今日单词训练</span>
+                    <strong>${dailyCompleted}<small> / ${dailyTarget}</small></strong>
+                  </div>
+                  <div class="daily-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="${dailyTarget}" aria-valuenow="${dailyCompleted}">
+                    <span class="daily-progress-fill" style="width:${dailyProgress}%"></span>
+                  </div>
+                  <div class="daily-progress-bottom">
+                    <span>${dailyProgress}% 已完成</span>
+                    <span>${Math.max(dailyTarget - dailyCompleted, 0)} 个剩余</span>
+                  </div>
+                  <button class="btn small ${
+                    dailyProgress >= 100 ? "ghost" : "primary"
+                  }" data-action="begin-daily-words">${icon(
+                    dailyProgress >= 100 ? "check" : "play",
+                  )}${dailyProgress >= 100 ? "今日已完成" : "继续今日任务"}</button>
+                </div>`
+              : `<div class="daily-word-start">
+                  <span class="task-icon">${icon("flame")}</span>
+                  <div><strong>今日单词任务尚未开始</strong><small>开始后才会记录并显示进度</small></div>
+                  <button class="btn small primary" data-action="start-daily-words">${icon(
+                    "play",
+                  )}开始今日 50 词</button>
+                </div>`
+          }
         </div>
 
         <div class="vocabulary-layout">
@@ -8027,7 +8042,7 @@
         },
         {
           label: "单词数据",
-          ok: Array.isArray(state.words) && state.words.length >= 28000,
+          ok: Array.isArray(state.words) && state.words.length >= 58000,
           detail: `${state.words.length} 个单词`,
         },
         {
