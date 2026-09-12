@@ -5000,7 +5000,7 @@
             [
               "reading/collections",
               "文章与文献库",
-              "610 篇原创英语文章与学习文献导读",
+              "2623 篇原创英语文章与学习文献导读",
               "22 个主题分类",
               "layers",
             ],
@@ -5258,7 +5258,7 @@
       }
       return renderDataLoading(
         "文章与文献库",
-        "正在准备 610 篇原创英语内容和学习文献导读。",
+        "正在准备 2623 篇原创英语内容和学习文献导读。",
       );
     }
 
@@ -5298,7 +5298,7 @@
         ${renderPageHeader(
           "Reading Collection",
           "文章与文献库",
-          "610 篇原创英语学习文章与学习文献导读，覆盖 22 个主题和不同英语难度。",
+          "2623 篇原创英语学习文章与学习文献导读，覆盖 22 个主题和不同英语难度。",
           `<button class="btn" data-action="random-collection">${icon(
             "refresh",
           )}随机阅读</button>
