@@ -26,6 +26,7 @@ rsync -a \
 
 PYTHONPATH= python3 - "$OUTPUT" "$BASE" <<'PY'
 import sys
+import shutil
 from pathlib import Path
 
 output = Path(sys.argv[1])
@@ -52,5 +53,22 @@ if versions_page.is_file():
         versions_page.read_text(encoding="utf-8"),
         encoding="utf-8",
     )
+for runtime_cleanup in [
+    "server",
+    "scripts",
+    "docs",
+    "assets/data/README.md",
+    "versions.html",
+    "versions/v1/.nojekyll",
+    "versions/v1/server",
+    "versions/v1/scripts",
+    "versions/v1/docs",
+    "versions/v1/assets/data/README.md",
+]:
+    target = output / runtime_cleanup
+    if target.is_dir():
+        shutil.rmtree(target)
+    elif target.is_file():
+        target.unlink()
 print(f"Pages build created at {output} with base {base or '/'}")
 PY
