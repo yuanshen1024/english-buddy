@@ -20,6 +20,10 @@ fabricated citations or copies of published papers.
 `speech-library.json.gz` contains 56,800 word and short-sentence read-aloud
 entries generated from 1,136 vocabulary items and 50 speaking patterns.
 
+`business-vocabulary.json.gz` contains 3,000 categorized business English
+terms covering finance, marketing, management, supply chains, HR, trade,
+business law, entrepreneurship and communication.
+
 Regenerate after obtaining the source CSV:
 
 ```bash

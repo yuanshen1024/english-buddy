@@ -14,6 +14,10 @@
     "../data/speech-library.json.gz",
     scriptUrl,
   ).toString();
+  const businessLibraryUrl = new URL(
+    "../data/business-vocabulary.json.gz",
+    scriptUrl,
+  ).toString();
 
   async function loadGzipJson(url) {
     const response = await fetch(url, {
@@ -65,6 +69,7 @@
   window.ENGLISH_BUDDY_VOCABULARY = [];
   window.ENGLISH_BUDDY_ARTICLE_LIBRARY = [];
   window.ENGLISH_BUDDY_SPEECH_LIBRARY = [];
+  window.ENGLISH_BUDDY_BUSINESS_LIBRARY = [];
   window.ENGLISH_BUDDY_VOCABULARY_READY = loadGzipJson(vocabularyUrl)
     .then((entries) => {
       window.ENGLISH_BUDDY_VOCABULARY = entries;
@@ -95,6 +100,17 @@
     })
     .catch((error) => {
       window.ENGLISH_BUDDY_SPEECH_LIBRARY_ERROR = error;
+      throw error;
+    });
+  window.ENGLISH_BUDDY_BUSINESS_LIBRARY_READY = loadGzipJson(
+    businessLibraryUrl,
+  )
+    .then((entries) => {
+      window.ENGLISH_BUDDY_BUSINESS_LIBRARY = entries;
+      return entries;
+    })
+    .catch((error) => {
+      window.ENGLISH_BUDDY_BUSINESS_LIBRARY_ERROR = error;
       throw error;
     });
 })();

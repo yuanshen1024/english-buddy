@@ -2159,6 +2159,10 @@
     speechPage: 0,
     speechSavedIds: [],
     activeSpeechId: "speech-000001",
+    businessQuery: "",
+    businessCategory: "全部",
+    businessPage: 0,
+    businessSavedIds: [],
     literatureQuery: "",
     literatureFilter: "all",
     literatureExamFilter: "all",
@@ -2268,6 +2272,9 @@
   let speechLibrary = [];
   let speechLibraryLoading = false;
   let speechLibraryError = "";
+  let businessLibrary = [];
+  let businessLibraryLoading = false;
+  let businessLibraryError = "";
 
   function initializeState() {
     state = loadState();
@@ -2393,6 +2400,7 @@
     "study/words": ["学习 / 单词", "单词学习"],
     "study/training": ["学习 / 训练中心", "单词训练中心"],
     "study/automotive": ["学习 / 汽车专业英语", "汽车专业英语"],
+    "study/business": ["学习 / 商务英语", "商务英语"],
     "study/listening": ["学习 / 听力", "听力训练"],
     "study/speaking": ["学习 / 朗读", "跟读朗读"],
     "study/translation": ["学习 / 翻译与英语朗读", "翻译与英语朗读"],
@@ -2470,6 +2478,7 @@
               ["study/words", "单词"],
               ["study/training", "训练中心"],
               ["study/automotive", "汽车英语"],
+              ["study/business", "商务英语"],
               ["study/listening", "听力"],
               ["study/speaking", "朗读"],
               ["study/translation", "翻译"],
@@ -2577,6 +2586,7 @@
             ["study/words", "单词", "type"],
             ["study/training", "训练中心", "target"],
             ["study/automotive", "汽车英语", "car"],
+            ["study/business", "商务英语", "chart"],
             ["study/listening", "听力", "headphones"],
             ["study/speaking", "朗读", "mic"],
             ["study/translation", "翻译", "languages"],
@@ -2750,6 +2760,7 @@
     if (route === "home") return renderHomePage();
     if (route === "study") return renderStudyOverview();
     if (route === "study/automotive") return renderAutomotiveWorkspace();
+    if (route === "study/business") return renderBusinessWorkspace();
     if (route.startsWith("study/")) return renderStudyPage(route);
     if (route === "speaking") return renderSpeakingPage();
     if (route === "exams") return renderExamsOverview();
@@ -3653,6 +3664,13 @@
                 "整车、发动机、新能源、维修与制造术语",
                 "230 个专业词条",
                 "car",
+              ],
+              [
+                "study/business",
+                "商务英语",
+                "管理、财务、市场、供应链和国际商务术语",
+                "3000 个商务词条",
+                "chart",
               ],
               [
                 "study/listening",
@@ -4575,6 +4593,157 @@
     `;
   }
 
+  function renderBusinessWorkspace() {
+    if (!businessLibrary.length) {
+      if (!businessLibraryLoading) ensureBusinessLibrary();
+      if (businessLibraryError) {
+        return `
+          <div class="page narrow">
+            <div class="empty-state"><div><span class="empty-icon">${icon(
+              "refresh",
+            )}</span><h3>商务英语词库加载失败</h3><p>${escapeHTML(
+              businessLibraryError,
+            )}</p><button class="btn primary" data-action="retry-business-library">${icon(
+              "refresh",
+            )}重试</button></div></div>
+          </div>
+        `;
+      }
+      return renderDataLoading(
+        "Business English",
+        "正在准备 3000 条商务英语专业词条。",
+      );
+    }
+
+    const categories = [
+      "全部",
+      ...new Set(
+        businessLibrary
+          .map((word) => word.businessCategory)
+          .filter(Boolean),
+      ),
+    ];
+    const query = state.businessQuery.trim().toLowerCase();
+    const terms = businessLibrary.filter((word) => {
+      if (
+        state.businessCategory !== "全部" &&
+        word.businessCategory !== state.businessCategory
+      ) {
+        return false;
+      }
+      return `${word.word} ${word.meaning} ${
+        word.businessCategory || ""
+      } ${(word.tags || []).join(" ")}`
+        .toLowerCase()
+        .includes(query);
+    });
+    const pageSize = 80;
+    const totalPages = Math.max(1, Math.ceil(terms.length / pageSize));
+    const page = Math.min(state.businessPage, totalPages - 1);
+    const visible = terms.slice(page * pageSize, page * pageSize + pageSize);
+    const mastered = businessLibrary.filter(
+      (word) => word.mastery >= 80,
+    ).length;
+
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          "Business English",
+          "商务英语词库",
+          "覆盖经营管理、财务金融、市场营销、供应链采购、人力资源、国际贸易、商务法律和商务沟通。",
+          `<button class="btn primary" data-action="start-business-training">${icon(
+            "target",
+          )}开始商务词训练</button>
+           <button class="btn soft" data-action="open-speech-settings">${icon(
+             "volume",
+           )}朗读设置</button>`,
+        )}
+        <div class="notes-stats automotive-stats">
+          ${[
+            ["商务词条", businessLibrary.length],
+            ["术语分类", categories.length - 1],
+            [
+              "专业短语",
+              businessLibrary.filter(
+                (word) =>
+                  word.word.includes(" ") || word.word.includes("-"),
+              ).length,
+            ],
+            ["已掌握", mastered],
+          ]
+            .map(
+              ([label, value]) =>
+                `<div class="stat-tile"><span>${label}</span><strong>${value}</strong></div>`,
+            )
+            .join("")}
+        </div>
+        <div class="notes-toolbar automotive-toolbar">
+          <label class="search-field">
+            ${icon("search")}
+            <input id="business-search" value="${escapeHTML(
+              state.businessQuery,
+            )}" placeholder="搜索商务英语术语或中文释义" />
+          </label>
+        </div>
+        <div class="resource-filters">
+          ${categories
+            .map(
+              (category) => `
+                <button class="course-chip ${
+                  state.businessCategory === category ? "active" : ""
+                }" data-action="filter-business" data-category="${escapeHTML(
+                  category,
+                )}">${escapeHTML(category)}</button>`,
+            )
+            .join("")}
+        </div>
+        <section class="panel automotive-glossary">
+          <div class="section-head">
+            <div><h2>商务术语表</h2><p>${terms.length} 个匹配词条</p></div>
+          </div>
+          <div class="automotive-term-grid">
+            ${visible
+              .map(
+                (word) => `
+                  <button class="automotive-term-card" data-action="open-business-term" data-id="${
+                    word.id
+                  }">
+                    <div>
+                      <span class="note-category">${escapeHTML(
+                        word.businessCategory || "商务英语",
+                      )}</span>
+                      <strong>${escapeHTML(word.word)}</strong>
+                      <p>${escapeHTML(word.meaning)}</p>
+                    </div>
+                    <span class="mastery-pill ${
+                      word.mastery >= 80
+                        ? "high"
+                        : word.mastery
+                          ? "medium"
+                          : "low"
+                    }">${word.mastery ? `${word.mastery}%` : "新词"}</span>
+                  </button>`,
+              )
+              .join("")}
+          </div>
+          ${
+            totalPages > 1
+              ? `<div class="vocabulary-pagination">
+                  <button class="btn small" data-action="business-page-prev" ${
+                    page === 0 ? "disabled" : ""
+                  }>${icon("chevronLeft")}上一页</button>
+                  <span>第 ${page + 1} / ${totalPages} 页</span>
+                  <button class="btn small" data-action="business-page-next" ${
+                    page >= totalPages - 1 ? "disabled" : ""
+                  }>下一页${icon("chevronRight")}</button>
+                </div>`
+              : ""
+          }
+        </section>
+      </div>
+    `;
+  }
+
   function renderSpeechLibrary() {
     if (!speechLibrary.length) {
       if (!speechLibraryLoading) ensureSpeechLibrary();
@@ -5406,6 +5575,31 @@
         throw error;
       });
     return speechLibrary._promise;
+  }
+
+  function ensureBusinessLibrary() {
+    if (businessLibrary.length) return Promise.resolve(businessLibrary);
+    if (businessLibraryLoading) return businessLibrary._promise;
+    businessLibraryLoading = true;
+    businessLibraryError = "";
+    const promise =
+      window.ENGLISH_BUDDY_BUSINESS_LIBRARY_READY ||
+      Promise.reject(new Error("Business library loader is unavailable."));
+    businessLibrary._promise = promise
+      .then((entries) => {
+        businessLibrary = Array.isArray(entries) ? entries : [];
+        businessLibraryLoading = false;
+        if (getRoute() === "study/business") renderApp();
+        return businessLibrary;
+      })
+      .catch((error) => {
+        businessLibraryLoading = false;
+        businessLibraryError =
+          error?.message || "商务英语词库暂时无法加载，请稍后重试。";
+        if (getRoute() === "study/business") renderApp();
+        throw error;
+      });
+    return businessLibrary._promise;
   }
 
   function renderArticleLibrary() {
@@ -8150,6 +8344,7 @@
         ["压缩词库", `${assetBase}/data/vocabulary.json.gz`],
         ["文章文献库", `${assetBase}/data/article-library.json.gz`],
         ["朗读短句库", `${assetBase}/data/speech-library.json.gz`],
+        ["商务英语词库", `${assetBase}/data/business-vocabulary.json.gz`],
       ];
 
       if (location.protocol !== "file:") {
@@ -8213,7 +8408,7 @@
         },
         {
           label: "单词数据",
-          ok: Array.isArray(state.words) && state.words.length >= 58000,
+          ok: Array.isArray(state.words) && state.words.length >= 61000,
           detail: `${state.words.length} 个单词`,
         },
         {
@@ -8561,7 +8756,9 @@
       `
         <div class="modal-header">
           <div><h2>${escapeHTML(word.word)}</h2><p>${escapeHTML(
-            word.automotiveCategory || "汽车专业",
+            word.businessCategory ||
+              word.automotiveCategory ||
+              "专业英语术语",
           )}</p></div>
           <button class="icon-button" data-action="close-modal">${icon("x")}</button>
         </div>
@@ -8569,7 +8766,7 @@
           <div class="automotive-term-detail">
             <span class="field-label">中文术语</span>
             <h3>${escapeHTML(word.meaning)}</h3>
-            <p>${escapeHTML(word.definition || "汽车专业英语术语")}</p>
+            <p>${escapeHTML(word.definition || "专业英语术语")}</p>
           </div>
           <div class="editor-actions" style="margin-top:18px">
             <button class="btn small" data-action="speak-text" data-text="${escapeHTML(
@@ -9915,6 +10112,50 @@
       renderApp();
       return;
     }
+    if (action === "retry-business-library") {
+      businessLibraryError = "";
+      businessLibraryLoading = false;
+      ensureBusinessLibrary();
+      renderApp();
+      return;
+    }
+    if (action === "filter-business") {
+      state.businessCategory = element.dataset.category;
+      state.businessPage = 0;
+      renderApp();
+      return;
+    }
+    if (action === "business-page-prev" || action === "business-page-next") {
+      state.businessPage = Math.max(
+        0,
+        state.businessPage + (action === "business-page-next" ? 1 : -1),
+      );
+      renderApp();
+      return;
+    }
+    if (action === "open-business-term") {
+      renderAutomotiveTermModal(id);
+      return;
+    }
+    if (action === "start-business-training") {
+      const words = [...businessLibrary]
+        .sort(
+          (a, b) =>
+            a.mastery - b.mastery ||
+            String(a.word).localeCompare(String(b.word)),
+        )
+        .slice(0, 20);
+      state.training.session = {
+        mode: "word-cards",
+        index: 0,
+        score: 0,
+        items: words.map((word) => word.id),
+        revealed: false,
+        feedback: "",
+      };
+      renderTrainingSessionModal();
+      return;
+    }
     if (action === "filter-speech-category") {
       state.speechCategory = element.dataset.category;
       state.speechPage = 0;
@@ -11064,6 +11305,20 @@
         }
       }, 220);
     }
+    if (target.id === "business-search") {
+      state.businessQuery = target.value;
+      state.businessPage = 0;
+      window.clearTimeout(target._businessFilterTimer);
+      target._businessFilterTimer = window.setTimeout(() => {
+        const position = target.selectionStart || target.value.length;
+        renderApp();
+        const next = document.getElementById("business-search");
+        if (next) {
+          next.focus();
+          next.setSelectionRange(position, position);
+        }
+      }, 220);
+    }
   });
 
   document.addEventListener("change", (event) => {
@@ -11154,6 +11409,7 @@
       ? window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY
       : [];
     let mainVocabulary = [];
+    let businessVocabulary = [];
     try {
       mainVocabulary = await window.ENGLISH_BUDDY_VOCABULARY_READY;
     } catch (error) {
@@ -11162,7 +11418,20 @@
         "完整词库暂时无法加载，已进入基础词库模式。刷新页面可重试。",
       );
     }
-    BUILTIN_VOCABULARY = [...mainVocabulary, ...automotive];
+    try {
+      businessVocabulary =
+        await window.ENGLISH_BUDDY_BUSINESS_LIBRARY_READY;
+    } catch (error) {
+      console.error("Business vocabulary failed to load:", error);
+    }
+    businessLibrary = Array.isArray(businessVocabulary)
+      ? businessVocabulary
+      : [];
+    BUILTIN_VOCABULARY = [
+      ...mainVocabulary,
+      ...businessLibrary,
+      ...automotive,
+    ];
     BUILTIN_WORD_IDS = new Set(
       BUILTIN_VOCABULARY.map((word) => word.id),
     );

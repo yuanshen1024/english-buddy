@@ -5,12 +5,13 @@ vocabulary, reading, literature, exams, speaking practice and English notes.
 
 ## Features
 
-- 58,269 indexed vocabulary entries with exam decks, word forms and review state.
+- 61,269 indexed vocabulary entries with exam decks, word forms and review state.
 - 230 automotive English terms across 10 professional categories.
 - CET-4, CET-6, IELTS, TOEFL and academic reading materials.
 - A 34-title English resource catalogue.
 - 2,623 original articles and study literature guides.
 - 56,800 word and short-sentence read-aloud entries.
+- 3,000 business English terms across 10 professional categories.
 - 14 English reading and shadowing collections.
 - English notes, rich-text editing, search, review cards and AI learning tools.
 - Responsive desktop, tablet and mobile layouts.
