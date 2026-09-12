@@ -18,6 +18,10 @@
     "../data/business-vocabulary.json.gz",
     scriptUrl,
   ).toString();
+  const automotiveLibraryUrl = new URL(
+    "../data/automotive-vocabulary.json.gz",
+    scriptUrl,
+  ).toString();
 
   async function loadGzipJson(url) {
     const response = await fetch(url, {
@@ -70,6 +74,7 @@
   window.ENGLISH_BUDDY_ARTICLE_LIBRARY = [];
   window.ENGLISH_BUDDY_SPEECH_LIBRARY = [];
   window.ENGLISH_BUDDY_BUSINESS_LIBRARY = [];
+  window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY = [];
   window.ENGLISH_BUDDY_VOCABULARY_READY = loadGzipJson(vocabularyUrl)
     .then((entries) => {
       window.ENGLISH_BUDDY_VOCABULARY = entries;
@@ -111,6 +116,17 @@
     })
     .catch((error) => {
       window.ENGLISH_BUDDY_BUSINESS_LIBRARY_ERROR = error;
+      throw error;
+    });
+  window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY_READY = loadGzipJson(
+    automotiveLibraryUrl,
+  )
+    .then((entries) => {
+      window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY = entries;
+      return entries;
+    })
+    .catch((error) => {
+      window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY_ERROR = error;
       throw error;
     });
 })();

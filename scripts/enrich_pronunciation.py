@@ -94,6 +94,76 @@ MANUAL_PHONETICS = {
     "swindon": "/ˈswɪndən/",
 }
 
+LETTER_IPA = {
+    "a": "eɪ",
+    "b": "biː",
+    "c": "siː",
+    "d": "diː",
+    "e": "iː",
+    "f": "ɛf",
+    "g": "dʒiː",
+    "h": "eɪtʃ",
+    "i": "aɪ",
+    "j": "dʒeɪ",
+    "k": "keɪ",
+    "l": "ɛl",
+    "m": "ɛm",
+    "n": "ɛn",
+    "o": "oʊ",
+    "p": "piː",
+    "q": "kjuː",
+    "r": "ɑr",
+    "s": "ɛs",
+    "t": "tiː",
+    "u": "juː",
+    "v": "viː",
+    "w": "ˈdʌbəljuː",
+    "x": "ɛks",
+    "y": "waɪ",
+    "z": "ziː",
+}
+
+
+def british_variants(word: str) -> list[str]:
+    variants = [word]
+    replacements = [
+        ("isation", "ization"),
+        ("isations", "izations"),
+        ("ising", "izing"),
+        ("ised", "ized"),
+        ("ise", "ize"),
+        ("yse", "yze"),
+        ("ysed", "yzed"),
+        ("ysing", "yzing"),
+        ("our", "or"),
+        ("re", "er"),
+        ("ae", "e"),
+        ("oe", "e"),
+    ]
+    for source, target in replacements:
+        if source in word:
+            variants.append(word.replace(source, target))
+    variants.extend(
+        [
+            word.replace("waggon", "wagon"),
+            word.replace("fulfilment", "fulfillment"),
+            word.replace("counselling", "counseling"),
+            word.replace("gruelling", "grueling"),
+            word.replace("lense", "lens"),
+            word.replace("reservior", "reservoir"),
+        ]
+    )
+    return list(dict.fromkeys(variant for variant in variants if variant))
+
+
+def acronym_ipa(word: str) -> str:
+    if not word.isalpha() or len(word) > 8:
+        return ""
+    symbols = [LETTER_IPA.get(letter) for letter in word.lower()]
+    if any(not symbol for symbol in symbols):
+        return ""
+    return f"/{' '.join(symbols)}/"
+
 
 def phones_to_ipa(pronunciation: str) -> str:
     result: list[str] = []
@@ -128,10 +198,28 @@ def main() -> None:
         type=Path,
         default=Path("/private/tmp/pronouncing_deps"),
     )
+    parser.add_argument(
+        "--g2p-path",
+        type=Path,
+        default=Path("/private/tmp/g2p_en_deps"),
+    )
     args = parser.parse_args()
 
     sys.path.insert(0, str(args.pronouncing_path))
-    import pronouncing  # type: ignore
+    try:
+        import pronouncing  # type: ignore
+    except Exception:
+        pronouncing = None
+
+    g2p = None
+    if args.g2p_path.is_dir():
+        try:
+            sys.path.insert(0, str(args.g2p_path))
+            from g2p_en import G2p  # type: ignore
+
+            g2p = G2p()
+        except Exception as error:
+            print(f"G2P unavailable: {error}")
 
     if args.vocabulary.suffix == ".gz":
         with gzip.open(args.vocabulary, "rt", encoding="utf-8") as source:
@@ -153,10 +241,23 @@ def main() -> None:
             entry["phoneticSource"] = "open pronunciation fallback"
             filled += 1
             continue
-        pronunciations = pronouncing.phones_for_word(word)
+        pronunciations = []
+        if pronouncing is not None:
+            for variant in british_variants(word):
+                pronunciations = pronouncing.phones_for_word(variant)
+                if pronunciations:
+                    break
         if not pronunciations:
-            continue
-        ipa = phones_to_ipa(pronunciations[0])
+            ipa = ""
+        else:
+            ipa = phones_to_ipa(pronunciations[0])
+        if not ipa and g2p is not None:
+            try:
+                ipa = phones_to_ipa(" ".join(g2p(word)))
+            except Exception:
+                ipa = ""
+        if not ipa:
+            ipa = acronym_ipa(word)
         if not ipa:
             continue
         entry["phoneticUS"] = ipa

@@ -5,12 +5,78 @@ from __future__ import annotations
 
 import json
 import gzip
+import argparse
+import csv
+import re
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_PATH = PROJECT_ROOT / "assets" / "data" / "automotive-vocabulary.js"
+OUTPUT_PATH = PROJECT_ROOT / "assets" / "data" / "automotive-vocabulary.json.gz"
 MAIN_VOCABULARY_PATH = PROJECT_ROOT / "assets" / "data" / "vocabulary.json.gz"
+TARGET_COUNT = 3230
+WORD_PATTERN = re.compile(r"^[A-Za-z][A-Za-z' -]{1,48}$")
+
+CATEGORY_KEYWORDS = {
+    "发动机": ["发动机", "引擎", "汽缸", "气缸", "活塞", "曲轴", "凸轮", "气门", "火花塞", "燃油", "涡轮", "进气", "排气", "点火"],
+    "新能源": ["电动汽车", "新能源", "电池", "充电", "电机", "逆变", "混合动力", "燃料电池", "续航"],
+    "传动系统": ["变速", "传动", "离合器", "齿轮", "差速", "驱动", "齿轮箱"],
+    "底盘系统": ["底盘", "悬架", "悬挂", "制动", "刹车", "转向", "车轮", "轮胎", "减振"],
+    "电气与电子": ["传感器", "控制器", "电气", "电路", "线束", "车灯", "继电器", "保险丝", "仪表"],
+    "车身与内饰": ["车身", "车门", "保险杠", "挡风", "后视镜", "座椅", "安全带", "内饰", "天窗", "后备箱"],
+    "诊断与维修": ["诊断", "维修", "故障", "修理", "保养", "磨损", "检测", "检修"],
+    "制造与工程": ["汽车制造", "汽车工程", "车辆工程", "冲压", "焊接", "铸造", "装配", "公差"],
+    "商务与供应链": ["汽车市场", "汽车销售", "汽车产业", "汽车公司", "汽车零部件"],
+    "安全与驾驶": ["驾驶", "安全气囊", "防抱死", "碰撞", "巡航", "自动驾驶", "车道"],
+}
+
+GENERATED_PATTERNS = [
+    ("{term} assembly", "{meaning}总成"),
+    ("{term} system", "{meaning}系统"),
+    ("{term} inspection", "{meaning}检查"),
+    ("{term} maintenance", "{meaning}维护"),
+    ("{term} repair", "{meaning}维修"),
+    ("{term} failure", "{meaning}故障"),
+    ("{term} replacement", "{meaning}更换"),
+    ("{term} performance", "{meaning}性能"),
+    ("{term} specification", "{meaning}规格"),
+    ("{term} control", "{meaning}控制"),
+    ("{term} sensor", "{meaning}传感器"),
+    ("{term} diagnosis", "{meaning}诊断"),
+    ("{term} adjustment", "{meaning}调整"),
+]
+
+
+def category_for(translation: str) -> str:
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        if any(keyword in translation for keyword in keywords):
+            return category
+    return ""
+
+
+def rank(row: dict[str, str]) -> int:
+    values = []
+    for key in ("frq", "bnc"):
+        try:
+            value = int(row.get(key) or 0)
+        except ValueError:
+            value = 0
+        if value > 0:
+            values.append(value)
+    return min(values) if values else 10_000_000
+
+
+def clean(value: str, limit: int = 220) -> str:
+    value = (value or "").replace("\r", " ")
+    parts = [
+        re.sub(r"\s+", " ", part).strip(" ;")
+        for part in re.split(r"\\n|\n", value)
+    ]
+    return "；".join(
+        part
+        for part in parts
+        if part and not part.startswith(("[网络]", "[计]", "[医]", "[化]"))
+    )[:limit]
 
 MANUAL_PHONETICS = {
     "piston": "/ˈpɪstən/",
@@ -326,6 +392,14 @@ TERMS = {
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--source",
+        type=Path,
+        default=Path("/private/tmp/ecdict-automotive.csv"),
+    )
+    args = parser.parse_args()
+
     phonetics = {}
     if MAIN_VOCABULARY_PATH.is_file():
         with gzip.open(MAIN_VOCABULARY_PATH, "rt", encoding="utf-8") as source:
@@ -336,41 +410,117 @@ def main() -> None:
             if word and phonetic:
                 phonetics[word] = phonetic
 
-    entries = []
+    selected = {}
     for category, terms in TERMS.items():
         for word, meaning in terms:
-            index = len(entries) + 1
-            phrase_phonetic = " ".join(
-                phonetics.get(part.lower(), "") or MANUAL_PHONETICS.get(part.lower(), "")
-                for part in word.replace("-", " ").split()
-            ).strip()
-            entries.append(
-                {
-                    "id": f"auto-word-{index:04d}",
-                    "word": word,
-                    "phonetic": phrase_phonetic,
-                    "phoneticUS": phrase_phonetic,
-                    "part": "term",
-                    "meaning": meaning,
-                    "definition": f"汽车专业术语 · {category}",
-                    "example": "",
-                    "translation": "",
-                    "deck": "汽车专业",
-                    "mastery": 0,
-                    "tags": ["汽车专业", category],
-                    "source": "English Buddy 汽车专业英语术语库",
-                    "reviewAt": None,
-                    "builtin": True,
-                    "automotiveCategory": category,
-                }
-            )
+            selected[word.lower()] = {
+                "word": word,
+                "meaning": meaning,
+                "category": category,
+                "rank": -1,
+                "source": "English Buddy 汽车专业英语术语库",
+            }
 
-    payload = json.dumps(entries, ensure_ascii=False, separators=(",", ":"))
-    OUTPUT_PATH.write_text(
-        "/* Curated automotive English terminology. */\n"
-        f"window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY={payload};\n",
-        encoding="utf-8",
-    )
+    if args.source.is_file():
+        with args.source.open(
+            "r",
+            encoding="utf-8",
+            errors="ignore",
+            newline="",
+        ) as source:
+            for row in csv.DictReader(source):
+                word = (row.get("word") or "").strip()
+                meaning = clean(row.get("translation") or "")
+                if not meaning or not WORD_PATTERN.fullmatch(word):
+                    continue
+                category = category_for(meaning)
+                if not category or word.lower() in selected:
+                    continue
+                selected[word.lower()] = {
+                    "word": word.lower(),
+                    "meaning": meaning,
+                    "category": category,
+                    "rank": rank(row),
+                    "source": "ECDICT 汽车关键词筛选 · English Buddy 分类",
+                }
+
+    base_terms = [
+        {
+            "word": word,
+            "meaning": meaning,
+            "category": category,
+        }
+        for category, terms in TERMS.items()
+        for word, meaning in terms
+    ]
+    for english_pattern, chinese_pattern in GENERATED_PATTERNS:
+        for base in base_terms:
+            if len(selected) >= TARGET_COUNT:
+                break
+            generated_word = english_pattern.format(term=base["word"])
+            key = generated_word.lower()
+            if key in selected:
+                continue
+            selected[key] = {
+                "word": generated_word,
+                "meaning": chinese_pattern.format(
+                    meaning=base["meaning"],
+                ),
+                "category": base["category"],
+                "rank": 9_000_000,
+                "source": "English Buddy 汽车工程短语扩展",
+            }
+        if len(selected) >= TARGET_COUNT:
+            break
+
+    ranked = sorted(
+        selected.values(),
+        key=lambda item: (
+            item["rank"],
+            item["category"],
+            item["word"],
+        ),
+    )[:TARGET_COUNT]
+
+    entries = []
+    for index, item in enumerate(ranked, start=1):
+        word = item["word"]
+        category = item["category"]
+        meaning = item["meaning"]
+        phrase_phonetic = " ".join(
+            phonetics.get(part.lower(), "")
+            or MANUAL_PHONETICS.get(part.lower(), "")
+            for part in word.replace("-", " ").split()
+        ).strip()
+        entries.append(
+            {
+                "id": f"auto-word-{index:04d}",
+                "word": word,
+                "phonetic": phrase_phonetic,
+                "phoneticUS": phrase_phonetic,
+                "part": "term",
+                "meaning": meaning,
+                "definition": f"汽车专业术语 · {category}",
+                "example": "",
+                "translation": "",
+                "deck": "汽车专业",
+                "mastery": 0,
+                "tags": ["汽车专业", category],
+                "source": item["source"],
+                "reviewAt": None,
+                "builtin": True,
+                "automotiveCategory": category,
+            }
+        )
+
+    payload = json.dumps(
+        entries,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(OUTPUT_PATH, "wb", compresslevel=9) as output:
+        output.write(payload)
     print(f"Generated {len(entries)} automotive terms: {OUTPUT_PATH}")
 
 

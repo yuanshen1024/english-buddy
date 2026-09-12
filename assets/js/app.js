@@ -2121,6 +2121,7 @@
       accent: "en-GB",
       rate: 0.92,
       voiceURI: "",
+      quality: "natural",
     },
     training: {
       dailyDate: "",
@@ -7115,6 +7116,7 @@
   function renderSpeechSettingsModal() {
     refreshSpeechVoices();
     const voices = getVoicesForAccent(state.speech.accent);
+    const bestVoice = voices[0];
     openModal(
       `
         <div class="modal-header">
@@ -7158,6 +7160,24 @@
                 .join("")}
             </select>
           </label>
+          <div class="field">
+            <span class="field-label">语音质量</span>
+            <div class="speech-rate-row">
+              <button class="course-chip ${
+                state.speech.quality === "natural" ? "active" : ""
+              }" data-action="set-speech-quality" data-quality="natural">高质量拟真优先</button>
+              <button class="course-chip ${
+                state.speech.quality === "system" ? "active" : ""
+              }" data-action="set-speech-quality" data-quality="system">系统默认</button>
+            </div>
+            ${
+              bestVoice
+                ? `<p class="speech-help">当前推荐：${escapeHTML(
+                    bestVoice.name,
+                  )} · ${escapeHTML(bestVoice.lang)}</p>`
+                : `<p class="speech-help">设备暂未返回可用英语语音。</p>`
+            }
+          </div>
           <div class="field">
             <span class="field-label">语速</span>
             <div class="speech-rate-row">
@@ -8345,6 +8365,7 @@
         ["文章文献库", `${assetBase}/data/article-library.json.gz`],
         ["朗读短句库", `${assetBase}/data/speech-library.json.gz`],
         ["商务英语词库", `${assetBase}/data/business-vocabulary.json.gz`],
+        ["汽车英语词库", `${assetBase}/data/automotive-vocabulary.json.gz`],
       ];
 
       if (location.protocol !== "file:") {
@@ -8408,7 +8429,7 @@
         },
         {
           label: "单词数据",
-          ok: Array.isArray(state.words) && state.words.length >= 61000,
+          ok: Array.isArray(state.words) && state.words.length >= 64000,
           detail: `${state.words.length} 个单词`,
         },
         {
@@ -9671,6 +9692,12 @@
       renderSpeechSettingsModal();
       return;
     }
+    if (action === "set-speech-quality") {
+      state.speech.quality = element.dataset.quality || "natural";
+      saveState();
+      renderSpeechSettingsModal();
+      return;
+    }
     if (action === "test-speech") {
       speakText(
         "The universe is very large and still expanding.",
@@ -10495,7 +10522,38 @@
     preferredNames.forEach((preferred, index) => {
       if (name.includes(preferred)) score += 50 - index;
     });
-    if (name.includes("compact") || name.includes("default")) score -= 5;
+    const highQualityNames = [
+      "natural",
+      "neural",
+      "premium",
+      "enhanced",
+      "siri",
+      "google",
+      "microsoft",
+      "aria",
+      "jenny",
+      "sonia",
+      "ryan",
+      "libby",
+    ];
+    if (state.speech.quality === "natural") {
+      highQualityNames.forEach((quality) => {
+        if (name.includes(quality)) score += 80;
+      });
+      if (!voice.localService) score += 18;
+    }
+    const noveltyNames = [
+      "bad news",
+      "bahh",
+      "bells",
+      "boing",
+      "bubbles",
+      "cellos",
+      "wobble",
+      "albert",
+    ];
+    if (noveltyNames.some((novelty) => name.includes(novelty))) score -= 200;
+    if (name.includes("compact") || name.includes("default")) score -= 15;
     return score;
   }
 
@@ -10564,15 +10622,28 @@
             : state.speech.rate || 0.92,
         ),
       );
-      let retried = false;
+      const chunks = (
+        value.match(/[^.!?]+[.!?]+(?:["'])?|[^.!?]+$/g) || [value]
+      )
+        .map((chunk) => chunk.trim())
+        .filter(Boolean)
+        .reduce((result, sentence) => {
+          const previous = result[result.length - 1];
+          if (previous && previous.length + sentence.length < 240) {
+            result[result.length - 1] = `${previous} ${sentence}`;
+          } else {
+            result.push(sentence);
+          }
+          return result;
+        }, []);
 
       return new Promise((resolve) => {
         const cleanup = () => {
           button?.classList.remove("is-speaking");
           resolve();
         };
-        const createUtterance = (voice) => {
-          const utterance = new SpeechSynthesisUtterance(value);
+        const createUtterance = (voice, chunk) => {
+          const utterance = new SpeechSynthesisUtterance(chunk);
           utterance.lang =
             language === "zh"
               ? "zh-CN"
@@ -10583,18 +10654,25 @@
           utterance.pitch = 1;
           utterance.volume = 1;
           if (voice) utterance.voice = voice;
-          utterance.onend = cleanup;
+          return utterance;
+        };
+        const playChunk = (index, voice, retried = false) => {
+          if (index >= chunks.length) {
+            cleanup();
+            return;
+          }
+          const utterance = createUtterance(voice, chunks[index]);
+          utterance.onend = () => playChunk(index + 1, selectedVoice, false);
           utterance.onerror = (event) => {
             if (event.error === "canceled" || event.error === "interrupted") {
               cleanup();
               return;
             }
             if (!retried) {
-              retried = true;
               const fallbackVoice =
-                voices.find((voice) => voice !== selectedVoice) || null;
+                voices.find((candidate) => candidate !== voice) || null;
               window.setTimeout(
-                () => synth.speak(createUtterance(fallbackVoice)),
+                () => playChunk(index, fallbackVoice, true),
                 180,
               );
               return;
@@ -10602,9 +10680,9 @@
             cleanup();
             showToast("英语朗读暂时失败，请检查浏览器语音权限后重试。");
           };
-          return utterance;
+          synth.speak(utterance);
         };
-        synth.speak(createUtterance(selectedVoice));
+        playChunk(0, selectedVoice);
       });
     });
   }
@@ -11403,13 +11481,9 @@
   });
 
   async function bootstrap() {
-    const automotive = Array.isArray(
-      window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY,
-    )
-      ? window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY
-      : [];
     let mainVocabulary = [];
     let businessVocabulary = [];
+    let automotive = [];
     try {
       mainVocabulary = await window.ENGLISH_BUDDY_VOCABULARY_READY;
     } catch (error) {
@@ -11423,6 +11497,12 @@
         await window.ENGLISH_BUDDY_BUSINESS_LIBRARY_READY;
     } catch (error) {
       console.error("Business vocabulary failed to load:", error);
+    }
+    try {
+      automotive =
+        await window.ENGLISH_BUDDY_AUTOMOTIVE_VOCABULARY_READY;
+    } catch (error) {
+      console.error("Automotive vocabulary failed to load:", error);
     }
     businessLibrary = Array.isArray(businessVocabulary)
       ? businessVocabulary
