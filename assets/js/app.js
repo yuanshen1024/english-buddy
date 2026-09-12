@@ -2293,6 +2293,8 @@
     if (state.training.dailyDate !== today) {
       state.training.dailyDate = today;
       state.training.completedTaskIds = [];
+      state.dailyWordIds = [];
+      state.dailyCompletedIds = [];
     }
   }
 
@@ -3730,6 +3732,14 @@
       state.words.reduce((sum, word) => sum + word.mastery, 0) /
         Math.max(state.words.length, 1),
     );
+    const dailyTarget = state.dailyWordIds.length || 50;
+    const dailyCompleted = Math.min(
+      new Set(state.dailyCompletedIds).size,
+      dailyTarget,
+    );
+    const dailyProgress = Math.round(
+      (dailyCompleted / Math.max(dailyTarget, 1)) * 100,
+    );
 
     return `
       <div class="page">
@@ -3788,16 +3798,25 @@
               )
               .join("")}
           </div>
-          <div class="daily-word-progress">
-            <span>${icon("flame")} 今日计划：${
-              state.dailyWordIds.length || 50
-            } 个新词 · 已完成 ${state.dailyCompletedIds.length}</span>
-            <div class="mini-progress"><span style="width:${Math.min(
-              100,
-              (state.dailyCompletedIds.length /
-                Math.max(state.dailyWordIds.length || 50, 1)) *
-                100,
-            )}%"></span></div>
+          <div class="daily-word-progress" data-daily-progress="${dailyProgress}">
+            <div class="daily-progress-top">
+              <span>${icon("flame")}今日单词训练</span>
+              <strong>${dailyCompleted}<small> / ${dailyTarget}</small></strong>
+            </div>
+            <div class="daily-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="${dailyTarget}" aria-valuenow="${dailyCompleted}">
+              <span class="daily-progress-fill" style="width:${dailyProgress}%"></span>
+            </div>
+            <div class="daily-progress-bottom">
+              <span>${dailyProgress}% 已完成</span>
+              <span>${Math.max(dailyTarget - dailyCompleted, 0)} 个剩余</span>
+            </div>
+            <button class="btn small ${
+              dailyProgress >= 100 ? "ghost" : "primary"
+            }" data-action="${
+              state.dailyWordIds.length ? "begin-daily-words" : "start-daily-words"
+            }">${icon(
+              dailyProgress >= 100 ? "check" : "play",
+            )}${dailyProgress >= 100 ? "今日已完成" : "继续今日任务"}</button>
           </div>
         </div>
 
@@ -7934,14 +7953,17 @@
       const root = document.getElementById("diagnostic-results");
       if (!root) return;
       const results = [];
+      const assetBase = `${APP_BASE}/assets`;
       const routeChecks = [
-        ["首页路由", "/"],
-        ["笔记中心", "/notes"],
-        ["单词工作区", "/study/words"],
-        ["文献工作区", "/reading/literature"],
-        ["论文详情", "/reading/literature/paper-carbon"],
-        ["样式资源", "/assets/css/styles.css"],
-        ["脚本资源", "/assets/js/app.js"],
+        ["首页路由", hrefFor("home")],
+        ["笔记中心", hrefFor("notes")],
+        ["单词工作区", hrefFor("study/words")],
+        ["文献工作区", hrefFor("reading/literature")],
+        ["论文详情", hrefFor("reading/literature/paper-carbon")],
+        ["样式资源", `${assetBase}/css/styles.css`],
+        ["脚本资源", `${assetBase}/js/app.js`],
+        ["压缩词库", `${assetBase}/data/vocabulary.json.gz`],
+        ["文章文献库", `${assetBase}/data/article-library.json.gz`],
       ];
 
       if (location.protocol !== "file:") {
@@ -7949,13 +7971,21 @@
           routeChecks.map(async ([label, path]) => {
             try {
               const response = await fetch(path, {
-                method: "HEAD",
+                method: "GET",
                 cache: "no-store",
               });
+              const isSpaFallback =
+                response.status === 404 &&
+                !path.includes("/assets/") &&
+                /English Buddy/i.test(await response.text());
               return {
                 label,
-                ok: response.ok,
-                detail: response.ok ? "响应正常" : `HTTP ${response.status}`,
+                ok: response.ok || isSpaFallback,
+                detail: response.ok
+                  ? "HTTP 200"
+                  : isSpaFallback
+                    ? "SPA 404 回退正常"
+                    : `HTTP ${response.status}`,
               };
             } catch {
               return { label, ok: false, detail: "无法访问" };
