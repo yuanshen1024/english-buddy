@@ -5,8 +5,8 @@ vocabulary, reading, literature, exams, speaking practice and English notes.
 
 ## Features
 
-- 61,269 indexed vocabulary entries with exam decks, word forms and review state.
-- 230 automotive English terms across 10 professional categories.
+- 64,269 indexed vocabulary entries with exam decks, word forms and review state.
+- 3,230 automotive English terms across 10 professional categories.
 - CET-4, CET-6, IELTS, TOEFL and academic reading materials.
 - A 34-title English resource catalogue.
 - 2,623 original articles and study literature guides.
