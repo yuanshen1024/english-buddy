@@ -35,6 +35,33 @@
     return JSON.parse(text);
   }
 
+  function expandSpeechLibrary(payload) {
+    if (Array.isArray(payload)) return payload;
+    const words = Array.isArray(payload?.words) ? payload.words : [];
+    const frames = Array.isArray(payload?.frames) ? payload.frames : [];
+    const targetCount = Number(payload?.targetCount) || 56800;
+    const entries = [];
+    let index = 1;
+    for (let frameIndex = 0; frameIndex < frames.length; frameIndex += 1) {
+      const frame = frames[frameIndex];
+      for (const item of words) {
+        entries.push({
+          id: `speech-${String(index).padStart(6, "0")}`,
+          word: item.word,
+          meaning: item.meaning,
+          english: frame.english.replaceAll("{word}", item.word),
+          chinese: frame.chinese.replaceAll("{word}", item.word),
+          category: frame.category,
+          deck: item.deck || "高频英语",
+          level: frameIndex < 10 ? "A2" : frameIndex < 25 ? "B1" : "B2",
+          readingSeconds: 3 + ((index + frameIndex) % 5),
+        });
+        index += 1;
+      }
+    }
+    return entries.slice(0, targetCount);
+  }
+
   window.ENGLISH_BUDDY_VOCABULARY = [];
   window.ENGLISH_BUDDY_ARTICLE_LIBRARY = [];
   window.ENGLISH_BUDDY_SPEECH_LIBRARY = [];
@@ -62,8 +89,9 @@
     speechLibraryUrl,
   )
     .then((entries) => {
-      window.ENGLISH_BUDDY_SPEECH_LIBRARY = entries;
-      return entries;
+      const expanded = expandSpeechLibrary(entries);
+      window.ENGLISH_BUDDY_SPEECH_LIBRARY = expanded;
+      return expanded;
     })
     .catch((error) => {
       window.ENGLISH_BUDDY_SPEECH_LIBRARY_ERROR = error;
