@@ -4420,6 +4420,39 @@ h4 {
   margin-bottom: 14px;
 }
 
+.alphabet-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+
+.alphabet-filter button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 720;
+}
+
+.alphabet-filter button:hover {
+  background: var(--surface-muted);
+  color: var(--ink);
+}
+
+.alphabet-filter button.active {
+  background: var(--accent);
+  color: white;
+}
+
 .translation-direction > span {
   margin-left: auto;
   color: var(--ink-soft);
@@ -5289,6 +5322,15 @@ h4 {
 
   .notes-toolbar .btn {
     width: 100%;
+  }
+
+  .alphabet-filter {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .alphabet-filter button {
+    flex: 0 0 auto;
   }
 
   .form-grid.two,
