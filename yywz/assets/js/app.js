@@ -2153,6 +2153,12 @@
     activeCollectionId: "collection-0001",
     collectionFavorites: [],
     collectionProgress: {},
+    speechQuery: "",
+    speechCategory: "全部",
+    speechLevel: "全部",
+    speechPage: 0,
+    speechSavedIds: [],
+    activeSpeechId: "speech-000001",
     literatureQuery: "",
     literatureFilter: "all",
     literatureExamFilter: "all",
@@ -2259,6 +2265,9 @@
   let articleLibrary = [];
   let articleLibraryLoading = false;
   let articleLibraryError = "";
+  let speechLibrary = [];
+  let speechLibraryLoading = false;
+  let speechLibraryError = "";
 
   function initializeState() {
     state = loadState();
@@ -4566,6 +4575,174 @@
     `;
   }
 
+  function renderSpeechLibrary() {
+    if (!speechLibrary.length) {
+      if (!speechLibraryLoading) ensureSpeechLibrary();
+      if (speechLibraryError) {
+        return `
+          <div class="page narrow">
+            <div class="empty-state"><div><span class="empty-icon">${icon(
+              "refresh",
+            )}</span><h3>朗读短句库加载失败</h3><p>${escapeHTML(
+              speechLibraryError,
+            )}</p><button class="btn primary" data-action="retry-speech-library">${icon(
+              "refresh",
+            )}重试</button></div></div>
+          </div>
+        `;
+      }
+      return renderDataLoading(
+        "English Speaking Library",
+        "正在准备 56800 条单词与短句朗读内容。",
+      );
+    }
+
+    const categories = [
+      "全部",
+      ...new Set(speechLibrary.map((item) => item.category)),
+    ].sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const levels = [
+      "全部",
+      ...new Set(speechLibrary.map((item) => item.level)),
+    ];
+    const query = state.speechQuery.trim().toLowerCase();
+    const filtered = speechLibrary.filter((item) => {
+      if (
+        state.speechCategory !== "全部" &&
+        item.category !== state.speechCategory
+      )
+        return false;
+      if (
+        state.speechLevel !== "全部" &&
+        item.level !== state.speechLevel
+      )
+        return false;
+      return `${item.english} ${item.chinese} ${item.word} ${
+        item.meaning
+      } ${item.deck}`
+        .toLowerCase()
+        .includes(query);
+    });
+    const pageSize = 80;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const page = Math.min(state.speechPage, totalPages - 1);
+    const visible = filtered.slice(page * pageSize, page * pageSize + pageSize);
+    const words = new Set(speechLibrary.map((item) => item.word)).size;
+
+    return `
+      <div class="page">
+        ${renderPageHeader(
+          "English Read Aloud",
+          "英语朗读短句库",
+          "56800 条单词、短语和短句，支持标准朗读、跟读、收藏和加入笔记。",
+          `<button class="btn" data-action="random-speech-item">${icon(
+            "refresh",
+          )}随机朗读</button>
+           <button class="btn soft" data-action="open-speech-settings">${icon(
+             "volume",
+           )}朗读设置</button>`,
+        )}
+        <div class="notes-stats speech-stats">
+          ${[
+            ["朗读内容", speechLibrary.length],
+            ["核心单词", words],
+            ["短句分类", categories.length - 1],
+            ["已收藏", state.speechSavedIds.length],
+          ]
+            .map(
+              ([label, value]) =>
+                `<div class="stat-tile"><span>${label}</span><strong>${value}</strong></div>`,
+            )
+            .join("")}
+        </div>
+        <div class="notes-toolbar speech-toolbar">
+          <label class="search-field">
+            ${icon("search")}
+            <input id="speech-search" value="${escapeHTML(
+              state.speechQuery,
+            )}" placeholder="搜索英文短句、中文、单词或分类" />
+          </label>
+        </div>
+        <div class="resource-filters">
+          ${categories
+            .map(
+              (category) => `
+                <button class="course-chip ${
+                  state.speechCategory === category ? "active" : ""
+                }" data-action="filter-speech-category" data-category="${escapeHTML(
+                  category,
+                )}">${escapeHTML(category)}</button>`,
+            )
+            .join("")}
+        </div>
+        <div class="resource-filters speech-levels">
+          ${levels
+            .map(
+              (level) => `
+                <button class="course-chip ${
+                  state.speechLevel === level ? "active" : ""
+                }" data-action="filter-speech-level" data-level="${level}">${level}</button>`,
+            )
+            .join("")}
+        </div>
+        <div class="speech-library-grid">
+          ${visible
+            .map(
+              (item) => `
+                <article class="speech-library-card">
+                  <div class="speech-card-head">
+                    <div>
+                      <span class="note-category">${escapeHTML(
+                        item.category,
+                      )}</span>
+                      <span class="tag">${item.level}</span>
+                    </div>
+                    <button class="icon-button ${
+                      state.speechSavedIds.includes(item.id)
+                        ? "is-saved"
+                        : ""
+                    }" data-action="toggle-speech-save" data-id="${
+                      item.id
+                    }">${icon("bookmark")}</button>
+                  </div>
+                  <p class="speech-english">${escapeHTML(item.english)}</p>
+                  <p class="speech-chinese">${escapeHTML(item.chinese)}</p>
+                  <div class="speech-word">
+                    <strong>${escapeHTML(item.word)}</strong>
+                    <span>${escapeHTML(item.meaning)}</span>
+                  </div>
+                  <div class="speech-card-actions">
+                    <button class="btn small primary" data-action="speak-text" data-text="${escapeHTML(
+                      item.english,
+                    )}">${icon("volume")}朗读</button>
+                    <button class="btn small soft" data-action="shadow-text" data-text="${escapeHTML(
+                      item.english,
+                    )}">${icon("mic")}跟读</button>
+                    <button class="btn small" data-action="add-speech-note" data-id="${
+                      item.id
+                    }">${icon("plus")}笔记</button>
+                  </div>
+                </article>`,
+            )
+            .join("")}
+        </div>
+        ${
+          totalPages > 1
+            ? `<div class="vocabulary-pagination collection-pagination">
+                <button class="btn small" data-action="speech-page-prev" ${
+                  page === 0 ? "disabled" : ""
+                }>${icon("chevronLeft")}上一页</button>
+                <span>第 ${page + 1} / ${totalPages} 页</span>
+                <button class="btn small" data-action="speech-page-next" ${
+                  page >= totalPages - 1 ? "disabled" : ""
+                }>下一页${icon("chevronRight")}</button>
+              </div>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
   function renderStudyPage(route) {
     const page = route.split("/")[1];
     if (page === "words") {
@@ -4633,39 +4810,7 @@
     }
 
     if (page === "speaking") {
-      return `
-        <div class="page narrow">
-          ${renderPageHeader(
-            "Read Aloud",
-            "跟读朗读",
-            "先听，再读。系统会标出重音和需要改进的发音。",
-            `<button class="btn soft" data-action="add-demo-note" data-kind="speaking">${icon(
-              "plus",
-            )}加入笔记</button>`,
-          )}
-          <section class="panel speaking-stage">
-            <div class="speaking-center">
-              <div class="speaking-avatar">${icon("headphones")}</div>
-              <div class="dialog-bubble">How do I get to the station?</div>
-              <div class="dialog-translation">我怎么去车站？</div>
-              <button class="mic-button" data-action="toggle-listening" aria-label="开始朗读">${icon(
-                "mic",
-              )}</button>
-              <div class="speaking-controls">
-                <button class="btn small" data-action="speak-text" data-text="How do I get to the station?" data-rate="0.7">${icon(
-                  "volume",
-                )}慢速</button>
-                <button class="btn small" data-action="speak-text" data-text="How do I get to the station?" data-rate="1">${icon(
-                  "volume",
-                )}正常</button>
-                <button class="btn small" data-action="toggle-translation">${icon(
-                  "languages",
-                )}翻译</button>
-              </div>
-            </div>
-          </section>
-        </div>
-      `;
+      return renderSpeechLibrary();
     }
 
     if (page === "translation") {
@@ -5236,6 +5381,31 @@
         throw error;
       });
     return articleLibrary._promise;
+  }
+
+  function ensureSpeechLibrary() {
+    if (speechLibrary.length) return Promise.resolve(speechLibrary);
+    if (speechLibraryLoading) return speechLibrary._promise;
+    speechLibraryLoading = true;
+    speechLibraryError = "";
+    const promise =
+      window.ENGLISH_BUDDY_SPEECH_LIBRARY_READY ||
+      Promise.reject(new Error("Speech library loader is unavailable."));
+    speechLibrary._promise = promise
+      .then((entries) => {
+        speechLibrary = Array.isArray(entries) ? entries : [];
+        speechLibraryLoading = false;
+        if (getRoute() === "study/speaking") renderApp();
+        return speechLibrary;
+      })
+      .catch((error) => {
+        speechLibraryLoading = false;
+        speechLibraryError =
+          error?.message || "朗读短句库暂时无法加载，请稍后重试。";
+        if (getRoute() === "study/speaking") renderApp();
+        throw error;
+      });
+    return speechLibrary._promise;
   }
 
   function renderArticleLibrary() {
@@ -7979,6 +8149,7 @@
         ["脚本资源", `${assetBase}/js/app.js`],
         ["压缩词库", `${assetBase}/data/vocabulary.json.gz`],
         ["文章文献库", `${assetBase}/data/article-library.json.gz`],
+        ["朗读短句库", `${assetBase}/data/speech-library.json.gz`],
       ];
 
       if (location.protocol !== "file:") {
@@ -9736,6 +9907,94 @@
       renderApp();
       return;
     }
+    if (action === "retry-speech-library") {
+      speechLibraryError = "";
+      speechLibrary = [];
+      speechLibraryLoading = false;
+      ensureSpeechLibrary();
+      renderApp();
+      return;
+    }
+    if (action === "filter-speech-category") {
+      state.speechCategory = element.dataset.category;
+      state.speechPage = 0;
+      renderApp();
+      return;
+    }
+    if (action === "filter-speech-level") {
+      state.speechLevel = element.dataset.level;
+      state.speechPage = 0;
+      renderApp();
+      return;
+    }
+    if (action === "speech-page-prev" || action === "speech-page-next") {
+      state.speechPage = Math.max(
+        0,
+        state.speechPage + (action === "speech-page-next" ? 1 : -1),
+      );
+      renderApp();
+      document
+        .querySelector(".speech-toolbar")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (action === "random-speech-item") {
+      if (!speechLibrary.length) {
+        ensureSpeechLibrary();
+        return;
+      }
+      const item =
+        speechLibrary[Math.floor(Math.random() * speechLibrary.length)];
+      state.activeSpeechId = item.id;
+      state.speechQuery = "";
+      state.speechCategory = "全部";
+      state.speechLevel = "全部";
+      state.speechPage = Math.floor(
+        speechLibrary.findIndex((entry) => entry.id === item.id) / 80,
+      );
+      renderApp();
+      window.setTimeout(() => {
+        document
+          .querySelector(".speech-library-card")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+      return;
+    }
+    if (action === "toggle-speech-save") {
+      if (state.speechSavedIds.includes(id)) {
+        state.speechSavedIds = state.speechSavedIds.filter(
+          (item) => item !== id,
+        );
+      } else {
+        state.speechSavedIds.push(id);
+      }
+      saveState();
+      renderApp();
+      showToast(
+        state.speechSavedIds.includes(id)
+          ? "朗读内容已收藏。"
+          : "已取消收藏。",
+        "success",
+      );
+      return;
+    }
+    if (action === "add-speech-note") {
+      const item = speechLibrary.find((entry) => entry.id === id);
+      if (!item) return;
+      createNote({
+        title: `朗读短句：${item.word}`,
+        summary: item.chinese,
+        body: `<p class="english-text">${escapeHTML(
+          item.english,
+        )}</p><p>${escapeHTML(item.chinese)}</p><h3>关键词</h3><p><strong>${escapeHTML(
+          item.word,
+        )}</strong> = ${escapeHTML(item.meaning)}</p>`,
+        category: "speaking",
+        tags: ["朗读短句", item.category, item.deck],
+      });
+      showToast("朗读短句已加入笔记。", "success");
+      return;
+    }
     if (action === "filter-collection-type") {
       state.collectionType = element.dataset.type;
       state.collectionPage = 0;
@@ -10785,6 +11044,20 @@
         const position = target.selectionStart || target.value.length;
         renderApp();
         const next = document.getElementById("collection-search");
+        if (next) {
+          next.focus();
+          next.setSelectionRange(position, position);
+        }
+      }, 220);
+    }
+    if (target.id === "speech-search") {
+      state.speechQuery = target.value;
+      state.speechPage = 0;
+      window.clearTimeout(target._speechFilterTimer);
+      target._speechFilterTimer = window.setTimeout(() => {
+        const position = target.selectionStart || target.value.length;
+        renderApp();
+        const next = document.getElementById("speech-search");
         if (next) {
           next.focus();
           next.setSelectionRange(position, position);

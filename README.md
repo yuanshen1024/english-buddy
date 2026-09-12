@@ -10,6 +10,7 @@ vocabulary, reading, literature, exams, speaking practice and English notes.
 - CET-4, CET-6, IELTS, TOEFL and academic reading materials.
 - A 34-title English resource catalogue.
 - 2,623 original articles and study literature guides.
+- 56,800 word and short-sentence read-aloud entries.
 - 14 English reading and shadowing collections.
 - English notes, rich-text editing, search, review cards and AI learning tools.
 - Responsive desktop, tablet and mobile layouts.
