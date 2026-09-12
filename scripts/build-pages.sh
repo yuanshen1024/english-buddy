@@ -17,7 +17,12 @@ fi
 
 rm -rf "$OUTPUT"
 mkdir -p "$OUTPUT"
-cp -R "$SITE/." "$OUTPUT/"
+rsync -a \
+  --exclude='__pycache__/' \
+  --exclude='*.pyc' \
+  --exclude='*.pyo' \
+  --exclude='.DS_Store' \
+  "$SITE/" "$OUTPUT/"
 
 PYTHONPATH= python3 - "$OUTPUT" "$BASE" <<'PY'
 import sys
